@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Feedback</title>
+  <meta name="description" content="Share your experience with us — your feedback helps us improve." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:ital,wght@0,300;0,700;1,300\u0026display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="kiosk.css" />
+</head>
+
+<body>
+  <!-- Background blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- Idle reset warning overlay -->
+  <div class="idle-overlay hidden" id="idle-overlay">
+    <span class="idle-icon">⏳</span>
+    <span id="idle-countdown-text">Resetting in 30s …</span>
+  </div>
+
+  <main class="kiosk-wrapper">
+    <!-- FEEDBACK FORM -->
+    <section class="card" id="feedback-card">
+      <div class="card-header">
+        <div class="kiosk-logo-wrap" id="kiosk-logo-wrap" style="display:none">
+          <img id="kiosk-logo" src="" alt="Business logo" class="kiosk-logo" />
+        </div>
+        <div class="brand-dot"></div>
+        <span class="brand-label" id="brand-label">FEEDBACK KIOSK</span>
+      </div>
+
+      <!-- Wizard Progress -->
+      <div class="wizard-progress">
+        <div class="wizard-fill" id="wizard-fill" style="width: 20%;"></div>
+      </div>
+      <p class="step-indicator" id="step-indicator">Question 1 of 5</p>
+
+      <h1 class="card-title" id="question-title">How was the<br /><em>Cleanliness?</em></h1>
+      <p class="card-sub" id="card-sub">Your opinion helps us serve you better.</p>
+
+      <!-- Emoji Rating -->
+      <div class="rating-row" id="rating-row" role="group" aria-label="Rating">
+        <button class="emoji-btn" data-value="1" aria-label="Very Bad">
+          <span class="emoji">😡</span>
+          <span class="label" data-i18n="veryBad">Very Bad</span>
+        </button>
+        <button class="emoji-btn" data-value="2" aria-label="Bad">
+          <span class="emoji">😕</span>
+          <span class="label" data-i18n="bad">Bad</span>
+        </button>
+        <button class="emoji-btn" data-value="3" aria-label="Neutral">
+          <span class="emoji">😐</span>
+          <span class="label" data-i18n="neutral">Neutral</span>
+        </button>
+        <button class="emoji-btn" data-value="4" aria-label="Good">
+          <span class="emoji">🙂</span>
+          <span class="label" data-i18n="good">Good</span>
+        </button>
+        <button class="emoji-btn" data-value="5" aria-label="Excellent">
+          <span class="emoji">😍</span>
+          <span class="label" data-i18n="excellent">Excellent</span>
+        </button>
+      </div>
+
+      <!-- Comment Box -->
+      <div class="textarea-wrap hidden" id="comment-wrap">
+        <textarea id="comment" maxlength="300" data-i18n-placeholder="commentPlaceholder" placeholder="Any additional comments?" rows="4"></textarea>
+        <span class="char-count"><span id="char-num">0</span> / 300</span>
+      </div>
+
+      <!-- Error message -->
+      <p class="form-error" id="form-error" role="alert" aria-live="polite"></p>
+
+      <!-- Wizard Navigation -->
+      <div class="wizard-nav">
+        <button class="nav-btn btn-back hidden" id="back-btn" data-i18n="back">← Back</button>
+        <button class="submit-btn hidden" id="submit-btn" disabled>
+          <span class="btn-text" data-i18n="submitFeedback">Submit Feedback</span>
+          <span class="btn-icon">→</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- THANK YOU SCREEN -->
+    <section class="card thank-you-card hidden" id="thank-you-card">
+      <div class="ty-icon">✓</div>
+      <h2 class="ty-title" data-i18n="thankYou">Thank You!</h2>
+      <p class="ty-sub" data-i18n="feedbackReceived">Your feedback has been received.<br />We appreciate your time.</p>
+      <button class="restart-btn" id="restart-btn" data-i18n="leaveAnother">Leave Another Review</button>
+    </section>
+  </main>
+
+  <!-- Language Picker (bottom-right) -->
+  <div class="lang-picker" id="lang-picker">
+    <div class="lang-dropdown" id="lang-dropdown">
+      <button class="lang-option active" data-lang="en"><span class="lang-flag">🇺🇸</span> English</button>
+      <button class="lang-option" data-lang="fil"><span class="lang-flag">🇵🇭</span> Filipino</button>
+      <button class="lang-option" data-lang="es"><span class="lang-flag">🇪🇸</span> Español</button>
+      <button class="lang-option" data-lang="zh"><span class="lang-flag">🇨🇳</span> 中文</button>
+      <button class="lang-option" data-lang="ja"><span class="lang-flag">🇯🇵</span> 日本語</button>
+      <button class="lang-option" data-lang="ar"><span class="lang-flag">🇸🇦</span> العربية</button>
+    </div>
+    <button class="lang-toggle-btn" id="lang-toggle-btn">
+      <span id="lang-current-flag">🇺🇸</span>
+      <span id="lang-current-label">EN</span>
+      <span style="font-size:0.7rem;opacity:0.6">▲</span>
+    </button>
+  </div>
+
+  <script src="kiosk.js"></script>
+</body>
+
+</html>

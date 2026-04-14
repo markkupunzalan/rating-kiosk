@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Frontend Tests - Kiosk System</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #fff; color: #111; }
+    h1 { color: #333; }
+    .pass { color: green; font-weight: bold; }
+    .fail { color: red; font-weight: bold; }
+    .test-block { margin: 5px 0; }
+    #mock-dom { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Frontend JavaScript Test Runner</h1>
+  <div id="results"></div>
+
+  <!-- Mock DOM for testing admin.js functions -->
+  <div id="mock-dom">
+    <div id="sidebar-username"></div>
+    <div id="sidebar-avatar"></div>
+    <div id="topbar-avatar"></div>
+    <div id="cu-current-display"></div>
+    <div id="cu-avatar-preview"></div>
+    
+    <div id="badge-total" class=""></div>
+  </div>
+
+  <script>
+    // Tiny testing framework
+    let passed = 0;
+    let failed = 0;
+
+    function assertEqual(name, expected, actual) {
+      const res = document.getElementById('results');
+      const div = document.createElement('div');
+      div.className = 'test-block';
+      if (expected === actual) {
+        passed++;
+        div.innerHTML = `<span class="pass">✅ PASS</span>: ${name}`;
+      } else {
+        failed++;
+        div.innerHTML = `<span class="fail">❌ FAIL</span>: ${name} (Expected: "${expected}", Got: "${actual}")`;
+      }
+      res.appendChild(div);
+    }
+
+    function summary() {
+      const res = document.getElementById('results');
+      const div = document.createElement('div');
+      div.innerHTML = `<br><strong>Total Passed: ${passed}</strong><br><strong>Total Failed: ${failed}</strong>`;
+      if (failed > 0) {
+        div.style.color = 'red';
+      } else {
+        div.style.color = 'green';
+      }
+      res.appendChild(div);
+    }
+  </script>
+
+  <!-- Include the file we are testing (admin.js) -->
+  <script>
+    // Since admin.js calls initDashboard/etc on DOMContentLoaded, lets intercept or ignore
+    window.apiFetch = async function() { return {}; };
+  </script>
+  <script src="../admin/admin.js"></script>
+
+  <script>
+    // --- Test Suite ---
+    console.log("Running tests...");
+
+    // 1. Test setAdminUsername
+    setAdminUsername('John Doe');
+    assertEqual("setAdminUsername sets textContent properly", "John Doe", document.getElementById('sidebar-username').textContent);
+    assertEqual("setAdminUsername creates initials JD", "JD", document.getElementById('sidebar-avatar').textContent);
+
+    setAdminUsername('admin');
+    assertEqual("setAdminUsername creates initials AD for single word", "AD", document.getElementById('sidebar-avatar').textContent);
+
+    // 2. Test setBadge logic
+    setBadge('badge-total', 150, 100, {
+      format: (v, p) => `Diff is ${v - p}`,
+      up: 150 >= 100
+    });
+    let badgeEl = document.getElementById('badge-total');
+    assertEqual("setBadge formats string properly", "Diff is 50", badgeEl.textContent);
+    assertEqual("setBadge applies up-class correctly", true, badgeEl.classList.contains('badge-up'));
+
+    setBadge('badge-total', 80, 100, {
+      format: (v, p) => `Diff is ${v - p}`,
+      up: 80 >= 100
+    });
+    assertEqual("setBadge formats string properly for down", "Diff is -20", badgeEl.textContent);
+    assertEqual("setBadge applies down-class correctly", true, badgeEl.classList.contains('badge-down'));
+    assertEqual("setBadge removes old classes", false, badgeEl.classList.contains('badge-up'));
+
+    // Print summary
+    summary();
+  </script>
+</body>
+</html>
