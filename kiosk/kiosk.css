@@ -197,17 +197,19 @@ body {
 /* -------- EMOJI RATING -------- */
 .rating-row {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: space-between;
   margin-bottom: 1.5rem;
 }
 
 .emoji-btn {
   flex: 1;
-  background: rgba(255, 255, 255, 0.5);
-  border: 2px solid transparent;
+  background: transparent;
+  border: none;
+  appearance: none;
+  -webkit-appearance: none;
   border-radius: 16px;
-  padding: 1rem 0.4rem;
+  padding: 1rem 0.2rem;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -223,15 +225,16 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 160, 92, 0.05));
+  /* background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 160, 92, 0.05)); */
   opacity: 0;
   transition: opacity 0.2s;
 }
 
 .emoji-btn:hover {
   transform: translateY(-6px) scale(1.05);
-  border-color: var(--accent);
-  box-shadow: 0 12px 30px rgba(255, 107, 53, 0.2);
+  /* border-color: var(--accent);
+  box-shadow: 0 12px 30px rgba(255, 107, 53, 0.2); */
+  padding: 0.9rem;
 }
 
 .emoji-btn:hover::before {
