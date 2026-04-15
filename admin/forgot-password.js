@@ -80,13 +80,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
-showError(res.error || 'Failed to send reset link');
-      }
-
-    } catch (error) {
-  showError('Network error. Please try again.');
-} finally {
-  setLoading(false);
-}
-  });
-});
