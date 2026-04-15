@@ -1019,21 +1019,158 @@ function togglePwVisibility(inputId, eyeId) {
        <line x1="1" y1="1" x2="23" y2="23"/>`;
 }
 
+// Question labels — matches the modal breakdown (openModal)
+const Q_LABELS = ['Cleanliness', 'Staff', 'Speed', 'Quality', 'Overall'];
+
 /* ============================================================
-   CSV EXPORT — FEEDBACK MANAGEMENT PAGE
-   (exports the current filtered feedback table)
+   SHARED EXPORT DATA HELPER
+   Single source of truth for the API fetch + row mapping
+   consumed by BOTH exportCSV and exportPDF.
+   Any change to columns, truncation, or labelling is made here
+   once and reflected in both output formats automatically.
    ============================================================ */
-function exportCSV() {
+async function _fetchExportData() {
   const params = new URLSearchParams({
-    export: 'csv',
+    page: 1,
+    limit: 9999,
     search: filters.search,
     rating: filters.rating,
     sentiment: filters.sentiment,
     from: filters.from,
     to: filters.to,
   });
-  // Opens the PHP endpoint directly → browser downloads the file
-  window.open(`${API.feedback}?${params}`, '_blank');
+  const data = await apiFetch(`${API.feedback}?${params}`);
+  const records = data.data || [];
+
+  const sentLabel = s =>
+    ({ positive: 'Positive', neutral: 'Neutral', negative: 'Negative' }[s] || s);
+
+  const headers = ['#', 'Customer', 'Rating', 'Feedback Message', 'Sentiment', 'Date / Time'];
+
+  const rows = records.map((f, i) => {
+    const rating = Math.round(f.overall_rating);
+    const comment = f.comment
+      ? (f.comment.length > 90 ? f.comment.slice(0, 87) + '...' : f.comment)
+      : '(no comment)';
+    return [
+      (i + 1).toString(),
+      capitalize(f.language) + '  #' + f.id,
+      rating.toString(),
+      comment,
+      sentLabel(f.sentiment),
+      formatDateTime(new Date(f.submitted_at)),
+    ];
+  });
+
+  return { records, headers, rows };
+}
+
+/* ============================================================
+   CSV EXPORT — FEEDBACK MANAGEMENT PAGE
+   Calls _fetchExportData() to mirror the PDF column pipeline
+   exactly — no separate logic flow.
+   ============================================================ */
+async function exportCSV() {
+  const btn = document.getElementById('btnExportCSV');
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'wait';
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Exporting…`;
+  }
+
+  try {
+    // ── 1 & 2. Fetch + map via shared helper (mirrors PDF exactly) ─
+    const { records, headers, rows } = await _fetchExportData();
+
+    // ── 3. Build summary section (mirrors PDF stat-card row) ──────
+    const sentCounts = { positive: 0, neutral: 0, negative: 0 };
+    records.forEach(r => { if (sentCounts[r.sentiment] !== undefined) sentCounts[r.sentiment]++; });
+
+    const filterParts = [];
+    if (filters.search)    filterParts.push(`Search: "${filters.search}"`);
+    if (filters.rating)    filterParts.push(`Rating: ${filters.rating} stars`);
+    if (filters.sentiment) filterParts.push(`Sentiment: ${capitalize(filters.sentiment)}`);
+    if (filters.from)      filterParts.push(`From: ${filters.from}`);
+    if (filters.to)        filterParts.push(`To: ${filters.to}`);
+    const filterLabel = filterParts.length
+      ? filterParts.join(' | ')
+      : 'No filters applied — showing all records';
+
+    const generatedAt = new Date().toLocaleString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+
+    // ── Aggregate question totals (actual / max) ─────────────────
+    const maxScore = records.length * 5;  // max possible per question
+    const qTotals = Q_LABELS.map((_, qi) =>
+      records.reduce((sum, r) => sum + (r[`q${qi + 1}_rating`] ?? 0), 0)
+    );
+
+    // Summary rows: label in col A, value in col B
+    const summaryRows = [
+      ['FEEDBACK REPORT', 'Feedback Kiosk · Admin Console'],
+      ['Generated',        generatedAt],
+      ['Active Filters',   filterLabel],
+      ['', ''],
+      ['SUMMARY', ''],
+      ['Total Records',    records.length],
+      ['Positive',         sentCounts.positive],
+      ['Neutral',          sentCounts.neutral],
+      ['Negative',         sentCounts.negative],
+      ['', ''],
+      ['QUESTION SCORES', `(max ${maxScore} pts each — ${records.length} responses × 5)`],
+      ...Q_LABELS.map((label, qi) => [
+        `Q${qi + 1} — ${label}`,
+        `${qTotals[qi]} / ${maxScore}`,
+      ]),
+      ['', ''],   // spacer before data table
+    ];
+
+    // ── 4. Encode to CSV (RFC 4180 — quote fields containing , " \n) ─
+    function csvCell(val) {
+      const s = String(val ?? '');
+      return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }
+    const encode = row => row.map(csvCell).join(',');
+
+    const csvLines = [
+      ...summaryRows.map(encode),
+      encode(headers),
+      ...rows.map(encode),   // original feedback rows — comments untouched
+    ];
+    const csvContent = '\uFEFF' + csvLines.join('\r\n'); // BOM for Excel UTF-8
+
+    // ── 5. Trigger download ────────────────────────────────────
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `feedback-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast('CSV report downloaded ✓');
+  } catch (err) {
+    showToast('CSV export failed: ' + err.message, true);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10 9 9 9 8 9"/>
+      </svg> Export CSV`;
+    }
+  }
 }
 
 /* ============================================================
@@ -1053,20 +1190,10 @@ async function exportPDF() {
   }
 
   try {
-    // ── 1. Fetch ALL matching records (no page limit) ─────────
-    const params = new URLSearchParams({
-      page: 1,
-      limit: 9999,
-      search: filters.search,
-      rating: filters.rating,
-      sentiment: filters.sentiment,
-      from: filters.from,
-      to: filters.to,
-    });
-    const data = await apiFetch(`${API.feedback}?${params}`);
-    const records = data.data || [];
+    // ── 1 & 2. Fetch + map via shared helper (single source of truth) ─
+    const { records, rows: tableRows } = await _fetchExportData();
 
-    // ── 2. Initialise jsPDF (A4 landscape) ────────────────────
+    // ── 3. Initialise jsPDF (A4 landscape) ────────────────────
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     const PW = doc.internal.pageSize.getWidth();   // 297 mm
@@ -1193,9 +1320,67 @@ async function exportPDF() {
     });
 
     // ══════════════════════════════════════════════════════════
-    //  SECTION C — Filter bar  (58 → 66 mm)
+    //  SECTION B.5 — Question score row  (below stat cards)
+    //  5 compact cells: Q1 Cleanliness … Q5 Overall
+    //  Each shows: label, filled progress bar, "actual / max"
     // ══════════════════════════════════════════════════════════
-    const FILTER_Y = CARDS_Y + CARD_H + 5;  // 5 mm below cards
+    const maxScore = records.length * 5;
+    const qTotals = Q_LABELS.map((_, qi) =>
+      records.reduce((sum, r) => sum + (r[`q${qi + 1}_rating`] ?? 0), 0)
+    );
+
+    const QROW_Y   = CARDS_Y + CARD_H + 4;   // 4 mm gap below stat cards
+    const QROW_H   = 14;
+    const QCARD_GAP = 4;
+    const QCARD_W   = (CW - 4 * QCARD_GAP) / 5;
+    // Bar geometry inside each question card
+    const QBAR_H  = 2.5;
+    const QBAR_PAD = 6;   // horizontal padding inside card
+
+    Q_LABELS.forEach((label, qi) => {
+      const qx      = M + qi * (QCARD_W + QCARD_GAP);
+      const actual  = qTotals[qi];
+      const fillPct = maxScore > 0 ? actual / maxScore : 0;
+      // Bar colour: same scale as modal (red→orange→amber→blue→green)
+      const qBarColors = [C.red, [180, 95, 20], C.amber, C.accent, C.green];
+      // Pick colour by ratio: 0-20%=red, 21-40%=orange, 41-60%=amber, 61-80%=blue, 81-100%=green
+      const colorIdx = Math.min(4, Math.floor(fillPct * 5));
+      const barColor = qBarColors[colorIdx];
+
+      // Card background
+      doc.setFillColor(...C.white);
+      doc.setDrawColor(...C.border);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(qx, QROW_Y, QCARD_W, QROW_H, 2, 2, 'FD');
+
+      // Question label
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6);
+      doc.setTextColor(...C.textMuted);
+      doc.text(`Q${qi + 1} — ${label.toUpperCase()}`, qx + QBAR_PAD, QROW_Y + 4.2);
+
+      // Score "actual / max" — bold, accent colour
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...barColor);
+      doc.text(`${actual} / ${maxScore}`, qx + QBAR_PAD, QROW_Y + 9.2);
+
+      // Progress bar track
+      const barX = qx + QBAR_PAD;
+      const barW = QCARD_W - QBAR_PAD * 2;
+      doc.setFillColor(...C.lightGrey);
+      doc.roundedRect(barX, QROW_Y + QROW_H - 3.8, barW, QBAR_H, 1, 1, 'F');
+      // Progress bar fill
+      if (fillPct > 0) {
+        doc.setFillColor(...barColor);
+        doc.roundedRect(barX, QROW_Y + QROW_H - 3.8, barW * fillPct, QBAR_H, 1, 1, 'F');
+      }
+    });
+
+    // ══════════════════════════════════════════════════════════
+    //  SECTION C — Filter bar
+    // ══════════════════════════════════════════════════════════
+    const FILTER_Y = QROW_Y + QROW_H + 4;  // 4 mm below question row
     const FILTER_H = 8;
 
     doc.setFillColor(...C.lightGrey);
@@ -1214,32 +1399,13 @@ async function exportPDF() {
     doc.text(filterLabel, M + 28, FILTER_Y + 5.2);
 
     // ══════════════════════════════════════════════════════════
-    //  SECTION D — Data table  (starts at FILTER_Y + FILTER_H + 5)
+    //  SECTION D — Data table
     // ══════════════════════════════════════════════════════════
     const TABLE_Y = FILTER_Y + FILTER_H + 5;
 
-    // ── Build row data (ASCII-safe — no Unicode symbols) ──────
-    // jsPDF's built-in Helvetica does NOT support ★ ☆ ● · etc.
-    // They all render as '&' or garbled. Use plain text instead,
-    // then draw actual star shapes in didDrawCell.
-    const sentLabel = s => (
-      { positive: 'Positive', neutral: 'Neutral', negative: 'Negative' }[s] || s
-    );
-
-    const tableRows = records.map((f, i) => {
-      const rating = Math.round(f.overall_rating);
-      const comment = f.comment
-        ? (f.comment.length > 90 ? f.comment.slice(0, 87) + '...' : f.comment)
-        : '(no comment)';
-      return [
-        (i + 1).toString(),
-        capitalize(f.language) + '  #' + f.id,
-        rating.toString(),            // placeholder — stars drawn in didDrawCell
-        comment,
-        sentLabel(f.sentiment),
-        formatDateTime(new Date(f.submitted_at)),
-      ];
-    });
+    // tableRows already built by _fetchExportData() above.
+    // Rating column text is cleared in didParseCell; stars are
+    // drawn graphically in didDrawCell — same data, different render.
 
     // Print-safe cell colours
     const sentFillPrint = { positive: [220, 245, 233], neutral: [254, 245, 210], negative: [253, 230, 230] };
@@ -1331,21 +1497,20 @@ async function exportPDF() {
         }
       },
 
-      // ── Draw stars in Rating column ───────────────────────
+      // ── Draw stars in Rating column (col 2) ────────────────
       didDrawCell(data) {
         if (data.section !== 'body' || data.column.index !== 2) return;
         const rec = records[data.row.index];
         if (!rec) return;
 
         const rating = Math.round(rec.overall_rating || 0);
-        const color = starColorPrint[rating] || C.textLight;
-        const starR = 1.6;          // star outer radius in mm
-        const gap = 4.2;          // spacing between star centers
-        const total = 5;
+        const color  = starColorPrint[rating] || C.textLight;
+        const starR  = 1.6;
+        const gap    = 4.2;
+        const total  = 5;
         const cellCX = data.cell.x + data.cell.width / 2;
         const cellCY = data.cell.y + data.cell.height / 2;
         const startX = cellCX - ((total - 1) * gap) / 2;
-
         for (let i = 0; i < total; i++) {
           _drawStar(doc, startX + i * gap, cellCY, starR, i < rating, color);
         }
