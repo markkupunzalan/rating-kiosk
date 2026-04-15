@@ -45,7 +45,7 @@ $rawDays = isset($_GET['days']) ? intval($_GET['days']) : 30;
 $rawDays = max(0, $rawDays);   // clamp: never negative
 
 $isToday = ($rawDays === 0);
-$days    = $isToday ? 1 : $rawDays; // canonical day count (1 for Today)
+$days = $isToday ? 1 : $rawDays; // canonical day count (1 for Today)
 
 // ── Compute date boundaries in PHP (timezone-safe) ───────────
 //
@@ -59,21 +59,21 @@ $days    = $isToday ? 1 : $rawDays; // canonical day count (1 for Today)
 //
 // Formula: startOffset = N - 1  (offset in days back from today)
 
-$startOffset    = $days - 1;                // e.g. 0 for Today, 6 for Last 7d
-$prevEndOffset  = $startOffset;             // previous period ends where current starts
+$startOffset = $days - 1;                // e.g. 0 for Today, 6 for Last 7d
+$prevEndOffset = $startOffset;             // previous period ends where current starts
 $prevStartOffset = ($days * 2) - 1;         // previous period is same length
 
 // Literal date strings — safe in SQL because they come from date() not user input
-$startDate    = date('Y-m-d', strtotime("-{$startOffset} days"));
-$prevEndDate  = date('Y-m-d', strtotime("-{$prevEndOffset} days"));
+$startDate = date('Y-m-d', strtotime("-{$startOffset} days"));
+$prevEndDate = date('Y-m-d', strtotime("-{$prevEndOffset} days"));
 $prevStartDate = date('Y-m-d', strtotime("-{$prevStartOffset} days"));
 
 // SQL boundary expressions using quoted literal dates
 // Current period:  submitted_at >= 'YYYY-MM-DD'           (>= today/start 00:00:00)
 // Previous period: submitted_at >= 'YYYY-MM-DD' AND < 'YYYY-MM-DD'
-$startExpr    = "'{$startDate}'";
+$startExpr = "'{$startDate}'";
 $prevStartExp = "'{$prevStartDate}'";
-$prevEndExp   = "'{$prevEndDate}'";
+$prevEndExp = "'{$prevEndDate}'";
 
 // ── Helper: run a query and guard against DB errors ──────────
 function runQuery(mysqli $db, string $sql): mysqli_result
@@ -98,14 +98,14 @@ $summarySQL = "
 ";
 $row = runQuery($conn, $summarySQL)->fetch_assoc();
 
-$total     = (int)($row['total']    ?? 0);
-$positive  = (int)($row['positive'] ?? 0);
-$neutral   = (int)($row['neutral']  ?? 0);
-$negative  = (int)($row['negative'] ?? 0);
-$avgRating = round((float)($row['avg_rating'] ?? 0), 2);
+$total = (int) ($row['total'] ?? 0);
+$positive = (int) ($row['positive'] ?? 0);
+$neutral = (int) ($row['neutral'] ?? 0);
+$negative = (int) ($row['negative'] ?? 0);
+$avgRating = round((float) ($row['avg_rating'] ?? 0), 2);
 
 $positivePct = $total > 0 ? round($positive / $total * 100) : 0;
-$neutralPct  = $total > 0 ? round($neutral  / $total * 100) : 0;
+$neutralPct = $total > 0 ? round($neutral / $total * 100) : 0;
 $negativePct = $total > 0 ? round($negative / $total * 100) : 0;
 
 // ── Previous-period summary ──────────────────────────────────
@@ -122,10 +122,10 @@ $prevSummarySQL = "
 ";
 $prevRow = runQuery($conn, $prevSummarySQL)->fetch_assoc();
 
-$prevTotal     = (int)($prevRow['total']    ?? 0);
-$prevPositive  = (int)($prevRow['positive'] ?? 0);
-$prevNegative  = (int)($prevRow['negative'] ?? 0);
-$prevAvgRating = round((float)($prevRow['avg_rating'] ?? 0), 2);
+$prevTotal = (int) ($prevRow['total'] ?? 0);
+$prevPositive = (int) ($prevRow['positive'] ?? 0);
+$prevNegative = (int) ($prevRow['negative'] ?? 0);
+$prevAvgRating = round((float) ($prevRow['avg_rating'] ?? 0), 2);
 
 $prevPositivePct = $prevTotal > 0 ? round($prevPositive / $prevTotal * 100) : 0;
 $prevNegativePct = $prevTotal > 0 ? round($prevNegative / $prevTotal * 100) : 0;
@@ -147,11 +147,11 @@ $trendRes = runQuery($conn, $trendSQL);
 $trend = [];
 while ($r = $trendRes->fetch_assoc()) {
     $trend[] = [
-        'date'     => $r['date'],
-        'total'    => (int)$r['total'],
-        'positive' => (int)$r['positive'],
-        'neutral'  => (int)$r['neutral'],
-        'negative' => (int)$r['negative'],
+        'date' => $r['date'],
+        'total' => (int) $r['total'],
+        'positive' => (int) $r['positive'],
+        'neutral' => (int) $r['neutral'],
+        'negative' => (int) $r['negative'],
     ];
 }
 
@@ -165,9 +165,9 @@ $recentSQL = "
 $recentRes = runQuery($conn, $recentSQL);
 $recent = [];
 while ($r = $recentRes->fetch_assoc()) {
-    $r['id']             = (int)$r['id'];
-    $r['overall_rating'] = (float)$r['overall_rating'];
-    $recent[]            = $r;
+    $r['id'] = (int) $r['id'];
+    $r['overall_rating'] = (float) $r['overall_rating'];
+    $recent[] = $r;
 }
 
 // ── Hourly distribution ──────────────────────────────────────
@@ -180,7 +180,7 @@ $hourlySQL = "
 $hourlyRes = runQuery($conn, $hourlySQL);
 $hourly = array_fill(0, 24, 0);
 while ($r = $hourlyRes->fetch_assoc()) {
-    $hourly[(int)$r['h']] = (int)$r['cnt'];
+    $hourly[(int) $r['h']] = (int) $r['cnt'];
 }
 
 // ── Rating breakdown ─────────────────────────────────────────
@@ -194,9 +194,9 @@ $rbSQL = "
 $rbRes = runQuery($conn, $rbSQL);
 $ratingBreakdown = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
 while ($r = $rbRes->fetch_assoc()) {
-    $s = (int)$r['star'];
+    $s = (int) $r['star'];
     if ($s >= 1 && $s <= 5) {
-        $ratingBreakdown[$s] = (int)$r['cnt'];
+        $ratingBreakdown[$s] = (int) $r['cnt'];
     }
 }
 
@@ -205,25 +205,25 @@ while ($r = $rbRes->fetch_assoc()) {
 // exposed to API consumers. Use server-side error_log() during development.
 echo json_encode([
     'success' => true,
-    'period'  => $isToday ? 'today' : "{$days}d",
+    'period' => $isToday ? 'today' : "{$days}d",
     'summary' => [
-        'total'        => $total,
-        'avg_rating'   => $avgRating,
-        'positive'     => $positive,
-        'neutral'      => $neutral,
-        'negative'     => $negative,
+        'total' => $total,
+        'avg_rating' => $avgRating,
+        'positive' => $positive,
+        'neutral' => $neutral,
+        'negative' => $negative,
         'positive_pct' => $positivePct,
-        'neutral_pct'  => $neutralPct,
+        'neutral_pct' => $neutralPct,
         'negative_pct' => $negativePct,
     ],
     'prev_summary' => [
-        'total'        => $prevTotal,
-        'avg_rating'   => $prevAvgRating,
+        'total' => $prevTotal,
+        'avg_rating' => $prevAvgRating,
         'positive_pct' => $prevPositivePct,
         'negative_pct' => $prevNegativePct,
     ],
-    'trend'            => $trend,
-    'recent'           => $recent,
-    'hourly'           => $hourly,
+    'trend' => $trend,
+    'recent' => $recent,
+    'hourly' => $hourly,
     'rating_breakdown' => $ratingBreakdown,
 ]);

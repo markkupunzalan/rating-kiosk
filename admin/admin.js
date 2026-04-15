@@ -213,7 +213,7 @@ async function initDashboard(silent = false) {
   // Read selected range. value="0" means "Today"; parseInt('0') → 0 (falsy),
   // so we parse then normalise: NaN → 30, otherwise keep as-is (including 0).
   const rawVal = document.getElementById('dashRange').value;
-  const days   = isNaN(parseInt(rawVal, 10)) ? 30 : parseInt(rawVal, 10);
+  const days = isNaN(parseInt(rawVal, 10)) ? 30 : parseInt(rawVal, 10);
   const isToday = (days === 0);
 
   if (!silent) setLoading('page-dashboard', true);
@@ -1034,6 +1034,387 @@ function exportCSV() {
   });
   // Opens the PHP endpoint directly → browser downloads the file
   window.open(`${API.feedback}?${params}`, '_blank');
+}
+
+/* ============================================================
+   PDF EXPORT — FEEDBACK MANAGEMENT PAGE
+   Generates a polished, print-ready A4 landscape PDF with
+   a professional report layout: clean header, stats row,
+   filter bar, and full data table.
+   ============================================================ */
+async function exportPDF() {
+  const btn = document.getElementById('btnExportPDF');
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'wait';
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Generating…`;
+  }
+
+  try {
+    // ── 1. Fetch ALL matching records (no page limit) ─────────
+    const params = new URLSearchParams({
+      page: 1,
+      limit: 9999,
+      search: filters.search,
+      rating: filters.rating,
+      sentiment: filters.sentiment,
+      from: filters.from,
+      to: filters.to,
+    });
+    const data = await apiFetch(`${API.feedback}?${params}`);
+    const records = data.data || [];
+
+    // ── 2. Initialise jsPDF (A4 landscape) ────────────────────
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const PW = doc.internal.pageSize.getWidth();   // 297 mm
+    const PH = doc.internal.pageSize.getHeight();  // 210 mm
+
+    // ── Layout constants ──────────────────────────────────────
+    const M = 18;               // page margin — generous for print
+    const CW = PW - M * 2;      // content width (261 mm)
+    const FOOT = 8;                // footer height reserved
+
+    // ── Print-safe colour palette (softer for paper) ──────────
+    const C = {
+      navy: [24, 37, 56],     // header background
+      white: [255, 255, 255],
+      offWhite: [248, 250, 252],
+      lightGrey: [241, 245, 249],
+      border: [226, 232, 240],
+      textDark: [30, 41, 59],
+      textBody: [51, 65, 85],
+      textMuted: [100, 116, 139],
+      textLight: [148, 163, 184],
+      accent: [51, 112, 215],   // slightly desaturated blue
+      green: [16, 153, 106],   // print-safe green
+      amber: [194, 130, 10],   // print-safe amber
+      red: [200, 50, 50],    // print-safe red
+      indigo: [79, 82, 198],    // print-safe indigo
+    };
+
+    // ── 3. Build active-filter summary string ─────────────────
+    const filterParts = [];
+    if (filters.search) filterParts.push(`Search: "${filters.search}"`);
+    if (filters.rating) filterParts.push(`Rating: ${filters.rating}★`);
+    if (filters.sentiment) filterParts.push(`Sentiment: ${capitalize(filters.sentiment)}`);
+    if (filters.from) filterParts.push(`From: ${filters.from}`);
+    if (filters.to) filterParts.push(`To: ${filters.to}`);
+    const filterLabel = filterParts.length
+      ? filterParts.join('   ·   ')
+      : 'No filters applied — showing all records';
+
+    // Count sentiment breakdown
+    const sentCounts = { positive: 0, neutral: 0, negative: 0 };
+    records.forEach(r => { if (sentCounts[r.sentiment] !== undefined) sentCounts[r.sentiment]++; });
+
+    // ══════════════════════════════════════════════════════════
+    //  SECTION A — Dark header band  (0 → 32 mm)
+    // ══════════════════════════════════════════════════════════
+    const HDR_H = 32;
+    doc.setFillColor(...C.navy);
+    doc.rect(0, 0, PW, HDR_H, 'F');
+
+    // Left accent stripe (3 mm wide, full header height)
+    doc.setFillColor(...C.accent);
+    doc.rect(0, 0, 3, HDR_H, 'F');
+
+    // Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.setTextColor(...C.white);
+    doc.text('Feedback Report', M, 15);
+
+    // Subtitle
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...C.textLight);
+    doc.text('Feedback Kiosk  ·  Admin Console', M, 22);
+
+    // Timestamp — right-aligned in header
+    const nowStr = new Date().toLocaleString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...C.textLight);
+    doc.text(nowStr, PW - M, 13, { align: 'right' });
+
+    // Record count summary — right-aligned, smaller
+    doc.setFontSize(7.5);
+    doc.setTextColor(...C.textLight);
+    doc.text(`${records.length} records  ·  ${filterParts.length} filter${filterParts.length !== 1 ? 's' : ''} active`, PW - M, 20, { align: 'right' });
+
+    // ══════════════════════════════════════════════════════════
+    //  SECTION B — Stat cards row  (36 → 54 mm)
+    // ══════════════════════════════════════════════════════════
+    const CARDS_Y = HDR_H + 5;    // 37 mm — 5 mm breathing room below header
+    const CARD_COUNT = 4;
+    const CARD_GAP = 6;
+    const CARD_W = (CW - (CARD_COUNT - 1) * CARD_GAP) / CARD_COUNT;
+    const CARD_H = 18;
+
+    const cardDefs = [
+      { label: 'TOTAL RECORDS', value: records.length.toString(), accent: C.indigo },
+      { label: 'POSITIVE', value: sentCounts.positive.toString(), accent: C.green },
+      { label: 'NEUTRAL', value: sentCounts.neutral.toString(), accent: C.amber },
+      { label: 'NEGATIVE', value: sentCounts.negative.toString(), accent: C.red },
+    ];
+
+    cardDefs.forEach((card, i) => {
+      const cx = M + i * (CARD_W + CARD_GAP);
+
+      // Card background with subtle border
+      doc.setFillColor(...C.white);
+      doc.setDrawColor(...C.border);
+      doc.setLineWidth(0.35);
+      doc.roundedRect(cx, CARDS_Y, CARD_W, CARD_H, 2.5, 2.5, 'FD');
+
+      // Left accent bar inside card (3 mm wide strip)
+      doc.setFillColor(...card.accent);
+      // Clip to rounded rect by drawing a thin rect inside left edge
+      doc.rect(cx + 0.5, CARDS_Y + 3, 2, CARD_H - 6, 'F');
+
+      // Value — large, left of center
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(...card.accent);
+      doc.text(card.value, cx + 10, CARDS_Y + 11.5);
+
+      // Label — small caps, to the right of value
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.5);
+      doc.setTextColor(...C.textMuted);
+      const valWidth = doc.getTextWidth(card.value);
+      doc.text(card.label, cx + 10 + valWidth + 4, CARDS_Y + 11.5);
+    });
+
+    // ══════════════════════════════════════════════════════════
+    //  SECTION C — Filter bar  (58 → 66 mm)
+    // ══════════════════════════════════════════════════════════
+    const FILTER_Y = CARDS_Y + CARD_H + 5;  // 5 mm below cards
+    const FILTER_H = 8;
+
+    doc.setFillColor(...C.lightGrey);
+    doc.setDrawColor(...C.border);
+    doc.setLineWidth(0.25);
+    doc.roundedRect(M, FILTER_Y, CW, FILTER_H, 2, 2, 'FD');
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...C.textMuted);
+    doc.text('Active Filters:', M + 5, FILTER_Y + 5.2);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...C.textBody);
+    doc.text(filterLabel, M + 28, FILTER_Y + 5.2);
+
+    // ══════════════════════════════════════════════════════════
+    //  SECTION D — Data table  (starts at FILTER_Y + FILTER_H + 5)
+    // ══════════════════════════════════════════════════════════
+    const TABLE_Y = FILTER_Y + FILTER_H + 5;
+
+    // ── Build row data (ASCII-safe — no Unicode symbols) ──────
+    // jsPDF's built-in Helvetica does NOT support ★ ☆ ● · etc.
+    // They all render as '&' or garbled. Use plain text instead,
+    // then draw actual star shapes in didDrawCell.
+    const sentLabel = s => (
+      { positive: 'Positive', neutral: 'Neutral', negative: 'Negative' }[s] || s
+    );
+
+    const tableRows = records.map((f, i) => {
+      const rating = Math.round(f.overall_rating);
+      const comment = f.comment
+        ? (f.comment.length > 90 ? f.comment.slice(0, 87) + '...' : f.comment)
+        : '(no comment)';
+      return [
+        (i + 1).toString(),
+        capitalize(f.language) + '  #' + f.id,
+        rating.toString(),            // placeholder — stars drawn in didDrawCell
+        comment,
+        sentLabel(f.sentiment),
+        formatDateTime(new Date(f.submitted_at)),
+      ];
+    });
+
+    // Print-safe cell colours
+    const sentFillPrint = { positive: [220, 245, 233], neutral: [254, 245, 210], negative: [253, 230, 230] };
+    const sentTextPrint = { positive: [12, 120, 84], neutral: [154, 103, 8], negative: [160, 40, 40] };
+    const starColorPrint = { 5: C.green, 4: C.accent, 3: C.amber, 2: [180, 95, 20], 1: C.red };
+
+    // ── Star shape drawing helper ─────────────────────────────
+    // Draws a filled 5-point star at (cx, cy) with outer radius r.
+    // Uses a triangle-fan from the center to guarantee correct fill
+    // for the concave star polygon.
+    function _drawStar(doc, cx, cy, r, filled, color) {
+      const pts = [];
+      for (let i = 0; i < 10; i++) {
+        const angle = -Math.PI / 2 + (i * Math.PI / 5);
+        const rad = i % 2 === 0 ? r : r * 0.45;
+        pts.push([cx + rad * Math.cos(angle), cy + rad * Math.sin(angle)]);
+      }
+      doc.setFillColor(...(filled ? color : C.border));
+      // Fan from center — 10 triangles, each from center to two adjacent vertices
+      for (let i = 0; i < 10; i++) {
+        const j = (i + 1) % 10;
+        doc.triangle(cx, cy, pts[i][0], pts[i][1], pts[j][0], pts[j][1], 'F');
+      }
+    }
+
+    doc.autoTable({
+      startY: TABLE_Y,
+      margin: { left: M, right: M, bottom: FOOT + 6 },
+      tableWidth: CW,
+      head: [['#', 'Customer', 'Rating', 'Feedback Message', 'Sentiment', 'Date / Time']],
+      body: tableRows,
+
+      // ── Base cell styles ──────────────────────────────────
+      styles: {
+        font: 'helvetica',
+        fontSize: 8,
+        cellPadding: { top: 3.5, bottom: 3.5, left: 5, right: 5 },
+        lineColor: C.border,
+        lineWidth: 0.2,
+        valign: 'middle',
+        overflow: 'linebreak',
+        textColor: C.textBody,
+      },
+
+      // ── Header row ────────────────────────────────────────
+      headStyles: {
+        fillColor: C.navy,
+        textColor: [200, 210, 225],
+        fontSize: 7.5,
+        fontStyle: 'bold',
+        cellPadding: { top: 4, bottom: 4, left: 5, right: 5 },
+        halign: 'left',
+      },
+
+      // ── Alternating rows ──────────────────────────────────
+      alternateRowStyles: {
+        fillColor: [250, 251, 253],
+      },
+
+      // ── Column widths ─────────────────────────────────────
+      columnStyles: {
+        0: {
+          cellWidth: 14, halign: 'center', textColor: C.textMuted, fontStyle: 'normal', fontSize: 7.5,
+          cellPadding: { top: 3.5, bottom: 3.5, left: 2, right: 2 }
+        },
+        1: { cellWidth: 36 },
+        2: { cellWidth: 30, halign: 'center' },  // text cleared — stars drawn in didDrawCell
+        3: { cellWidth: 'auto' },
+        4: { cellWidth: 30, halign: 'center', cellPadding: { top: 3.5, bottom: 3.5, left: 6, right: 6 } },
+        5: { cellWidth: 40, textColor: C.textMuted, fontSize: 7.5 },
+      },
+
+      // ── Per-cell colouring ────────────────────────────────
+      didParseCell(data) {
+        if (data.section !== 'body') return;
+        const rec = records[data.row.index];
+        if (!rec) return;
+
+        // Rating column — clear text; stars drawn in didDrawCell
+        if (data.column.index === 2) {
+          data.cell.text = [''];  // clear — stars rendered graphically
+        }
+        // Sentiment column — tinted background with rounded feel
+        if (data.column.index === 4) {
+          data.cell.styles.fillColor = sentFillPrint[rec.sentiment] || C.offWhite;
+          data.cell.styles.textColor = sentTextPrint[rec.sentiment] || C.textBody;
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fontSize = 7.5;
+        }
+      },
+
+      // ── Draw stars in Rating column ───────────────────────
+      didDrawCell(data) {
+        if (data.section !== 'body' || data.column.index !== 2) return;
+        const rec = records[data.row.index];
+        if (!rec) return;
+
+        const rating = Math.round(rec.overall_rating || 0);
+        const color = starColorPrint[rating] || C.textLight;
+        const starR = 1.6;          // star outer radius in mm
+        const gap = 4.2;          // spacing between star centers
+        const total = 5;
+        const cellCX = data.cell.x + data.cell.width / 2;
+        const cellCY = data.cell.y + data.cell.height / 2;
+        const startX = cellCX - ((total - 1) * gap) / 2;
+
+        for (let i = 0; i < total; i++) {
+          _drawStar(doc, startX + i * gap, cellCY, starR, i < rating, color);
+        }
+      },
+
+      // ── Page header / footer ──────────────────────────────
+      didDrawPage(hookData) {
+        const pg = doc.internal.getCurrentPageInfo().pageNumber;
+        const total = doc.internal.getNumberOfPages();
+
+        // Continuation header on pages 2+
+        if (pg > 1) {
+          // Thin accent line at very top
+          doc.setFillColor(...C.accent);
+          doc.rect(0, 0, PW, 1.5, 'F');
+
+          // Mini header text
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(...C.textDark);
+          const titleText = 'Feedback Report';
+          doc.text(titleText, M, 7.5);
+          const titleWidth = doc.getTextWidth(titleText);
+
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7);
+          doc.setTextColor(...C.textMuted);
+          doc.text('(continued)', M + titleWidth + 2, 7.5);
+          doc.text(nowStr, PW - M, 7.5, { align: 'right' });
+        }
+
+        // ── Footer ────────────────────────────────────────
+        const footY = PH - FOOT;
+        // Thin separator line
+        doc.setDrawColor(...C.border);
+        doc.setLineWidth(0.25);
+        doc.line(M, footY, PW - M, footY);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(6.5);
+        doc.setTextColor(...C.textLight);
+        doc.text('Feedback Kiosk  ·  Admin Console', M, footY + 4.5);
+        doc.text(`Page ${pg} of ${total}`, PW - M, footY + 4.5, { align: 'right' });
+        doc.setTextColor(...C.border);
+        doc.text('CONFIDENTIAL', PW / 2, footY + 4.5, { align: 'center' });
+      },
+    });
+
+    // ── 5. Save ───────────────────────────────────────────────
+    const dateTag = new Date().toISOString().slice(0, 10);
+    doc.save(`feedback-report-${dateTag}.pdf`);
+    showToast('PDF report downloaded ✓');
+
+  } catch (err) {
+    showToast('PDF export failed: ' + err.message, true);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <polyline points="10 9 9 9 8 9" />
+      </svg> Export PDF`;
+    }
+  }
 }
 
 /* ============================================================
