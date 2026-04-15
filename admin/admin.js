@@ -259,8 +259,9 @@ async function initDashboard(silent = false) {
     buildLineChart(data.trend, isToday);
     buildPieChart(s.positive, s.neutral, s.negative);
     buildRecentTable(data.recent);
-    buildRatingBreakdown(data.rating_breakdown);
+    buildRatingBreakdown(data.rating_label_counts || data.rating_breakdown);
     buildHourlyChart(data.hourly);
+    buildQuestionBreakdown(data.question_label_counts);
     updateRefreshTimestamp();
   } catch (err) {
     if (!silent) showToast('Could not load dashboard data: ' + err.message, true);
@@ -378,10 +379,10 @@ function buildRatingBreakdown(breakdown) {
   const colors = { 5: '#10b981', 4: '#3b82f6', 3: '#f59e0b', 2: '#f97316', 1: '#ef4444' };
   const maxVal = Math.max(...Object.values(breakdown), 1);
 
-  document.getElementById('ratingBreakdown').innerHTML = [5, 4, 3, 2, 1].map(star => `
+  document.getElementById('ratingLabelBreakdown').innerHTML = [1, 2, 3, 4, 5].map(star => `
     <div style="display:flex;align-items:center;gap:10px">
-      <div style="font-size:11.5px;color:#6b7280;min-width:14px;text-align:right;font-family:'DM Mono',monospace">
-        ${star}
+      <div style="font-size:11.5px;color:#6b7280;min-width:96px;text-align:left;font-family:'DM Mono',monospace">
+        ${ratingText(star)}
       </div>
       <svg width="11" height="11" viewBox="0 0 24 24" fill="${colors[star]}" stroke="none">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
@@ -389,11 +390,57 @@ function buildRatingBreakdown(breakdown) {
       <div class="stat-bar" style="flex:1">
         <div class="stat-bar-fill" style="width:${Math.round((breakdown[star] || 0) / maxVal * 100)}%;background:${colors[star]}"></div>
       </div>
-      <div style="font-size:11.5px;color:#9ca3af;min-width:30px;text-align:right;font-family:'DM Mono',monospace">
+      <div style="font-size:11.5px;color:#9ca3af;min-width:36px;text-align:right;font-family:'DM Mono',monospace">
         ${breakdown[star] || 0}
       </div>
     </div>
   `).join('');
+}
+
+function buildQuestionBreakdown(questionCounts) {
+  if (!questionCounts || !Object.keys(questionCounts).length) {
+    document.getElementById('questionLabelBreakdown').innerHTML = '<div style="color:#6b7280;font-size:13px">No question breakdown available.</div>';
+    return;
+  }
+
+  const questionNames = ['Cleanliness', 'Staff', 'Speed', 'Quality', 'Overall'];
+  const labels = [
+    { value: 1, text: '😡 Very Bad' },
+    { value: 2, text: '😕 Bad' },
+    { value: 3, text: '😐 Neutral' },
+    { value: 4, text: '🙂 Good' },
+    { value: 5, text: '😍 Excellent' },
+  ];
+
+  const headerCols = questionNames.map(q => `<th style="padding:8px 10px;text-align:right;color:#475569;font-size:12px;border-bottom:1px solid #e2e8f0">${q}</th>`).join('');
+
+  const bodyRows = labels.map(label => {
+    const rowCells = questionNames.map((qName, index) => {
+      const key = `q${index + 1}`;
+      return `<td style="padding:8px 10px;text-align:right;color:#0f172a;font-size:13px;border-bottom:1px solid #f8fafc">${questionCounts[key]?.[label.value] || 0}</td>`;
+    }).join('');
+
+    return `<tr>
+      <td style="padding:8px 10px;color:#475569;font-size:12px;border-bottom:1px solid #e2e8f0">${label.text}</td>
+      ${rowCells}
+    </tr>`;
+  }).join('');
+
+  document.getElementById('questionLabelBreakdown').innerHTML = `
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-family:'DM Sans',sans-serif">
+        <thead>
+          <tr>
+            <th style="padding:8px 10px;text-align:left;color:#475569;font-size:12px;border-bottom:1px solid #e2e8f0">Response</th>
+            ${headerCols}
+          </tr>
+        </thead>
+        <tbody>
+          ${bodyRows}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 /* ============================================================
@@ -662,7 +709,9 @@ function openModal(id) {
         <div class="stat-bar" style="flex:1">
           <div class="stat-bar-fill" style="width:${val * 20}%;background:${color}"></div>
         </div>
-        <div style="font-size:11.5px;font-family:'DM Mono',monospace;color:#374151;min-width:20px">${val}/5</div>
+        <div style="font-size:11.5px;font-family:'DM Mono',monospace;color:#374151;min-width:96px;text-align:right">
+          ${ratingText(val)}
+        </div>
       </div>`;
   });
   questionHTML += `</div></div>`;
@@ -1585,6 +1634,16 @@ async function exportPDF() {
 /* ============================================================
    SHARED UTILITIES
    ============================================================ */
+function ratingText(value) {
+  return {
+    1: '😡 Very Bad',
+    2: '😕 Bad',
+    3: '😐 Neutral',
+    4: '🙂 Good',
+    5: '😍 Excellent',
+  }[value] || 'No rating';
+}
+
 function renderStars(rating) {
   return Array.from({ length: 5 }, (_, i) =>
     `<span style="color:${i < rating ? '#f59e0b' : '#e5e7eb'};font-size:13px">★</span>`

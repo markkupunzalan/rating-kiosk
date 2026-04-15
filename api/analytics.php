@@ -200,6 +200,32 @@ while ($r = $rbRes->fetch_assoc()) {
     }
 }
 
+// ── Label counts across all question responses ────────────────
+$labelCounts = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
+$questionLabelCounts = [
+    'q1' => [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0],
+    'q2' => [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0],
+    'q3' => [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0],
+    'q4' => [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0],
+    'q5' => [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0],
+];
+
+$responseSQL = "
+    SELECT q1_rating, q2_rating, q3_rating, q4_rating, q5_rating
+    FROM feedback
+    WHERE submitted_at >= {$startExpr}
+";
+$responseRes = runQuery($conn, $responseSQL);
+while ($r = $responseRes->fetch_assoc()) {
+    for ($i = 1; $i <= 5; $i++) {
+        $val = (int) $r["q{$i}_rating"];
+        if ($val >= 1 && $val <= 5) {
+            $labelCounts[$val]++;
+            $questionLabelCounts["q{$i}"][$val]++;
+        }
+    }
+}
+
 // ── JSON response ────────────────────────────────────────────
 // ARCH-2 FIX: Removed 'debug' key — internal date boundaries should not be
 // exposed to API consumers. Use server-side error_log() during development.
@@ -226,4 +252,6 @@ echo json_encode([
     'recent' => $recent,
     'hourly' => $hourly,
     'rating_breakdown' => $ratingBreakdown,
+    'rating_label_counts' => $labelCounts,
+    'question_label_counts' => $questionLabelCounts,
 ]);

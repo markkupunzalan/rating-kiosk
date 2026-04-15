@@ -328,10 +328,10 @@
         </div>
 
         <!-- Bottom Row -->
-        <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
 
           <!-- Recent Feedback Mini-Table -->
-          <div class="chart-card">
+          <div class="chart-card" style="grid-column: span 1">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
               <div>
                 <div class="chart-title" style="margin:0">Recent Feedback</div>
@@ -353,11 +353,18 @@
             </table>
           </div>
 
-          <!-- Rating Breakdown Bars -->
+          <!-- Rating Label Summary -->
           <div class="chart-card">
-            <div class="chart-title" style="margin-bottom:4px">Rating Breakdown</div>
-            <div class="chart-subtitle">Distribution by star count</div>
-            <div id="ratingBreakdown" style="display:flex;flex-direction:column;gap:10px;margin-top:4px"></div>
+            <div class="chart-title" style="margin-bottom:4px">Overall Response Labels</div>
+            <div class="chart-subtitle">Counts for Very Bad → Excellent across all questions</div>
+            <div id="ratingLabelBreakdown" style="display:flex;flex-direction:column;gap:10px;margin-top:12px"></div>
+          </div>
+
+          <!-- Question Label Distribution -->
+          <div class="chart-card">
+            <div class="chart-title" style="margin-bottom:4px">Question Label Breakdown</div>
+            <div class="chart-subtitle">Which questions received each label</div>
+            <div id="questionLabelBreakdown" style="margin-top:12px"></div>
           </div>
 
         </div><!-- /Bottom Row -->
