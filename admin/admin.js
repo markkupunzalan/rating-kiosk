@@ -901,10 +901,16 @@ async function initSettingsPage() {
 
     setValue("setting-business-name", data.business_name);
     setValue("setting-default-language", data.default_language);
-    setValue("setting-logo-url", data.logo_url);
     setValue("setting-primary-color", data.primary_color);
 
     setToggle("setting-anonymous-feedback", data.anonymous_feedback);
+
+    // Restore logo preview from the saved URL (relative path served from root)
+    if (data.logo_url) {
+      const isHttp = data.logo_url.startsWith("http");
+      const previewSrc = isHttp ? data.logo_url : "../" + data.logo_url;
+      showLogoPreview(previewSrc, data.logo_url.split("/").pop());
+    }
 
     // Re-sync username display in the Change Username section
     const sidebarUsername = document.getElementById("sidebar-username");
@@ -926,10 +932,10 @@ async function initSettingsPage() {
 }
 
 async function saveSettings() {
+  // Note: logo_url is persisted immediately on upload via upload_logo.php
   const payload = {
     business_name: getValueStr("setting-business-name"),
     default_language: getValueStr("setting-default-language"),
-    logo_url: getValueStr("setting-logo-url"),
     primary_color: getValueStr("setting-primary-color"),
     anonymous_feedback: getToggle("setting-anonymous-feedback"),
   };
@@ -942,6 +948,92 @@ async function saveSettings() {
     showToast("Settings saved successfully");
   } catch (err) {
     showToast("Save failed: " + err.message, true);
+  }
+}
+
+/* ── Logo upload helpers ─────────────────────────────────── */
+
+/**
+ * Called when the admin picks a file from the file picker.
+ * Shows an immediate local preview then uploads to the server.
+ */
+async function handleLogoFileChange(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  // Instant local preview via object URL
+  const objectUrl = URL.createObjectURL(file);
+  showLogoPreview(objectUrl, file.name);
+
+  // Show uploading indicator
+  const spinner = document.getElementById("logo-uploading");
+  if (spinner) spinner.style.display = "flex";
+
+  try {
+    const formData = new FormData();
+    formData.append("logo", file);
+
+    const res = await fetch("../api/upload_logo.php", {
+      method: "POST",
+      credentials: "same-origin",
+      body: formData,
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.error || "Upload failed");
+    }
+
+    // Update preview name to reflect the saved filename
+    const nameEl = document.getElementById("logo-preview-name");
+    if (nameEl) nameEl.textContent = data.logo_url.split("/").pop();
+
+    showToast("Logo uploaded successfully ✓");
+  } catch (err) {
+    showToast("Logo upload failed: " + err.message, true);
+    // Revert preview on failure
+    hideLogoPreview();
+  } finally {
+    if (spinner) spinner.style.display = "none";
+    // Reset the file input so the same file can be re-picked if needed
+    input.value = "";
+  }
+}
+
+/** Show/update the logo preview panel. */
+function showLogoPreview(src, name) {
+  const wrap = document.getElementById("logo-preview-wrap");
+  const img  = document.getElementById("logo-preview-img");
+  const nameEl = document.getElementById("logo-preview-name");
+
+  if (img)    img.src = src;
+  if (nameEl) nameEl.textContent = name || "";
+  if (wrap)   wrap.style.display = "flex";
+}
+
+/** Hide the preview panel (used when removing the logo). */
+function hideLogoPreview() {
+  const wrap = document.getElementById("logo-preview-wrap");
+  const img  = document.getElementById("logo-preview-img");
+  if (img)  img.src = "";
+  if (wrap) wrap.style.display = "none";
+}
+
+/**
+ * Clears the logo: hides the preview and persists an empty logo_url
+ * so the kiosk stops showing the old logo.
+ */
+async function removeLogo() {
+  hideLogoPreview();
+
+  try {
+    await apiFetch(API.settings, {
+      method: "POST",
+      body: JSON.stringify({ logo_url: "" }),
+    });
+    showToast("Logo removed");
+  } catch (err) {
+    showToast("Could not clear logo: " + err.message, true);
   }
 }
 

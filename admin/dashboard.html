@@ -1017,13 +1017,122 @@
                   "
                 >
                   <div>
-                    <label class="form-label">Logo URL</label>
+                    <label class="form-label">Logo</label>
+
+                    <!-- Hidden file picker – accepts PNG, JPG, SVG, WEBP, GIF -->
                     <input
-                      class="form-input"
-                      id="setting-logo-url"
-                      type="url"
-                      placeholder="https://…/logo.png"
+                      type="file"
+                      id="setting-logo-file"
+                      accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif"
+                      style="display:none"
+                      onchange="handleLogoFileChange(this)"
                     />
+
+                    <!-- Upload trigger button -->
+                    <button
+                      type="button"
+                      id="btn-upload-logo"
+                      onclick="document.getElementById('setting-logo-file').click()"
+                      style="
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 9px 16px;
+                        background: #f8fafc;
+                        border: 1px dashed #cbd5e1;
+                        border-radius: 8px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: #475569;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                      "
+                      onmouseover="this.style.background='#eff6ff';this.style.borderColor='#3b82f6';this.style.color='#2563eb'"
+                      onmouseout="this.style.background='#f8fafc';this.style.borderColor='#cbd5e1';this.style.color='#475569'"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                           stroke="currentColor" stroke-width="2"
+                           stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                      Upload Logo
+                    </button>
+
+                    <!-- Logo preview (hidden until an image is chosen / loaded) -->
+                    <div
+                      id="logo-preview-wrap"
+                      style="
+                        display: none;
+                        margin-top: 10px;
+                        align-items: center;
+                        gap: 12px;
+                      "
+                    >
+                      <img
+                        id="logo-preview-img"
+                        src=""
+                        alt="Logo preview"
+                        style="
+                          max-height: 56px;
+                          max-width: 160px;
+                          object-fit: contain;
+                          border: 1px solid #e5eaf0;
+                          border-radius: 8px;
+                          padding: 6px;
+                          background: #ffffff;
+                        "
+                      />
+                      <div style="display:flex;flex-direction:column;gap:4px">
+                        <span
+                          id="logo-preview-name"
+                          style="font-size:11.5px;font-weight:600;color:#374151;max-width:160px;
+                                 white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+                        ></span>
+                        <button
+                          type="button"
+                          onclick="removeLogo()"
+                          style="
+                            font-size: 11px;
+                            color: #ef4444;
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                            padding: 0;
+                            text-align: left;
+                            font-weight: 500;
+                          "
+                          onmouseover="this.style.textDecoration='underline'"
+                          onmouseout="this.style.textDecoration='none'"
+                        >Remove</button>
+                      </div>
+                    </div>
+
+                    <!-- Uploading spinner (shown during async upload) -->
+                    <div
+                      id="logo-uploading"
+                      style="
+                        display: none;
+                        margin-top: 8px;
+                        font-size: 12px;
+                        color: #6b7280;
+                        align-items: center;
+                        gap: 6px;
+                      "
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                           stroke="#6b7280" stroke-width="2"
+                           style="animation:spin 1s linear infinite">
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                      </svg>
+                      Uploading…
+                    </div>
+
+                    <!-- Accepted formats hint -->
+                    <div style="font-size:11px;color:#9ca3af;margin-top:6px">
+                      PNG, JPG, SVG, WEBP · max 5 MB
+                    </div>
                   </div>
                   <div>
                     <label class="form-label">Primary Accent Color</label>
