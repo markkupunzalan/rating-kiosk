@@ -462,7 +462,7 @@ if ($method === 'GET') {
 
         $sql = "SELECT id, q1_rating, q2_rating, q3_rating, q4_rating, q5_rating,
                         overall_rating, sentiment, comment, language, submitted_at
-                 FROM feedback $whereSQL ORDER BY submitted_at DESC";
+                 FROM feedback $whereSQL ORDER BY submitted_at ASC";
         $stmt = $conn->prepare($sql);
         if ($types && $params) {
             $stmt->bind_param($types, ...$params);
@@ -504,7 +504,7 @@ if ($method === 'GET') {
     // ── Fetch page rows ──────────────────────────────────────
     $dataSQL = "SELECT id, q1_rating, q2_rating, q3_rating, q4_rating, q5_rating,
                         overall_rating, sentiment, comment, language, submitted_at
-                 FROM feedback $whereSQL ORDER BY submitted_at DESC LIMIT ? OFFSET ?";
+                 FROM feedback $whereSQL ORDER BY submitted_at ASC LIMIT ? OFFSET ?";
 
     $stmtData = $conn->prepare($dataSQL);
     $allTypes = $types . 'ii';
