@@ -538,7 +538,7 @@ async function fetchFeedbackPage() {
   });
 
   const tbody = document.getElementById("feedbackTableBody");
-  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:40px">
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:40px">
     <div style="display:inline-flex;align-items:center;gap:8px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"
            style="animation:spin 1s linear infinite">
@@ -560,7 +560,7 @@ async function fetchFeedbackPage() {
     renderTable(data.data);
     renderPagination();
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#ef4444;padding:40px">
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444;padding:40px">
       Failed to load: ${escHtml(err.message)}
     </td></tr>`;
   }
@@ -572,7 +572,7 @@ function renderTable(records) {
   const start = (currentPage - 1) * PAGE_SIZE;
 
   if (!records.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:40px">
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:40px">
       No feedback found matching your filters.
     </td></tr>`;
     return;
@@ -583,20 +583,7 @@ function renderTable(records) {
       const starRating = Math.round(f.overall_rating);
       return `
     <tr>
-      <td style="font-size:12px;color:#d1d5db;font-family:'DM Mono',monospace">${start + i + 1}</td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:28px;height:28px;border-radius:50%;
-                      background:linear-gradient(135deg,#3b82f6,#6366f1);
-                      display:flex;align-items:center;justify-content:center;
-                      font-size:10px;font-weight:700;color:white;flex-shrink:0">
-            ${langFlag(f.language)}
-          </div>
-          <span style="font-size:13px;font-weight:500;color:#6b7280">
-            ${capitalize(f.language)} · #${f.id}
-          </span>
-        </div>
-      </td>
+      <td style="width:130px;font-size:12px;color:#6b7280;font-weight:600;text-align:center;font-family:'DM Mono',monospace">#${start + i + 1}</td>
       <td>${renderStars(starRating)}</td>
       <td style="max-width:280px">
         <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;font-size:13px;color:#4b5563">
@@ -1320,15 +1307,14 @@ async function _fetchExportData() {
     to: filters.to,
   });
   const data = await apiFetch(`${API.feedback}?${params}`);
-  const records = data.data || [];
+  const records = (data.data || []).sort((a, b) => a.id - b.id); // Sort by ID ascending (1-9)
 
   const sentLabel = (s) =>
     ({ positive: "Positive", neutral: "Neutral", negative: "Negative" })[s] ||
     s;
 
   const headers = [
-    "#",
-    "Customer",
+    "Customer #",
     "Rating",
     "Feedback Message",
     "Sentiment",
@@ -1344,7 +1330,6 @@ async function _fetchExportData() {
       : "(no comment)";
     return [
       (i + 1).toString(),
-      capitalize(f.language) + "  #" + f.id,
       rating.toString(),
       comment,
       sentLabel(f.sentiment),
@@ -1389,6 +1374,20 @@ async function exportCSV() {
       minute: "2-digit",
     });
 
+    const averageRating = records.length
+      ? records.reduce((sum, r) => sum + (parseFloat(r.overall_rating) || 0), 0) /
+        records.length
+      : 0;
+    const positivePct = records.length
+      ? Math.round((sentCounts.positive / records.length) * 100)
+      : 0;
+    const neutralPct = records.length
+      ? Math.round((sentCounts.neutral / records.length) * 100)
+      : 0;
+    const negativePct = records.length
+      ? Math.round((sentCounts.negative / records.length) * 100)
+      : 0;
+
     const qBreakdowns = Q_LABELS.map((_, qi) => {
       const counts = [0, 0, 0, 0, 0];
       records.forEach((r) => {
@@ -1410,6 +1409,11 @@ async function exportCSV() {
       ["FEEDBACK REPORT", "Feedback Kiosk · Admin Console"],
       ["Generated", generatedAt],
       ["", ""],
+      ["SUMMARY", ""],
+      ["Average Rating", "Positive Sentiment", "Neutral Sentiment", "Negative Sentiment"],
+      [averageRating.toFixed(1), `${positivePct}%`, `${neutralPct}%`, `${negativePct}%`],
+      [records.length, sentCounts.positive, sentCounts.neutral, sentCounts.negative],
+      ["", ""],
       ["QUESTION BREAKDOWN", ""],
       ["Response", "Cleanliness", "Staff", "Speed", "Quality", "Overall", "Total"],
       ["Very Bad", ...qBreakdowns.map((counts) => counts[0]), rowTotals[0]],
@@ -1422,13 +1426,6 @@ async function exportCSV() {
         ...colTotals,
         grandTotal,
       ],
-      ["", ""],
-      ["OVERALL SENTIMENT", ""],
-      ["Sentiment", "Count"],
-      ["Positive", sentCounts.positive],
-      ["Neutral", sentCounts.neutral],
-      ["Negative", sentCounts.negative],
-      ["Total", records.length],
       ["", ""],
       ["INDIVIDUAL RECORDS", ""],
       ["", ""],
@@ -1531,23 +1528,28 @@ async function exportPDF() {
       indigo: [79, 82, 198], // print-safe indigo
     };
 
-    // ── 3. Build active-filter summary string ─────────────────
-    const filterParts = [];
-    if (filters.search) filterParts.push(`Search: "${filters.search}"`);
-    if (filters.rating) filterParts.push(`Rating: ${filters.rating}★`);
-    if (filters.sentiment)
-      filterParts.push(`Sentiment: ${capitalize(filters.sentiment)}`);
-    if (filters.from) filterParts.push(`From: ${filters.from}`);
-    if (filters.to) filterParts.push(`To: ${filters.to}`);
-    const filterLabel = filterParts.length
-      ? filterParts.join("   ·   ")
-      : "No filters applied — showing all records";
+    // ── 3. Build summary header text ────────────────────────
+    const filterLabel = `${records.length} records`;
 
     // Count sentiment breakdown
     const sentCounts = { positive: 0, neutral: 0, negative: 0 };
     records.forEach((r) => {
       if (sentCounts[r.sentiment] !== undefined) sentCounts[r.sentiment]++;
     });
+
+    const averageRating = records.length
+      ? records.reduce((sum, r) => sum + Number(r.overall_rating || 0), 0) /
+        records.length
+      : 0;
+    const positivePct = records.length
+      ? Math.round((sentCounts.positive / records.length) * 100)
+      : 0;
+    const neutralPct = records.length
+      ? Math.round((sentCounts.neutral / records.length) * 100)
+      : 0;
+    const negativePct = records.length
+      ? Math.round((sentCounts.negative / records.length) * 100)
+      : 0;
 
     // Rating labels
     const ratingLabels = ["Very Bad", "Bad", "Neutral", "Good", "Excellent"];
@@ -1603,16 +1605,63 @@ async function exportPDF() {
     doc.setFontSize(7.5);
     doc.setTextColor(...C.textLight);
     doc.text(
-      `${records.length} records  ·  ${filterParts.length} filter${filterParts.length !== 1 ? "s" : ""} active`,
+      filterLabel,
       PW - M,
       20,
       { align: "right" },
     );
 
     // ══════════════════════════════════════════════════════════
-    //  SECTION B — Question breakdown table
+    //  SECTION B — Summary metrics table  
     // ══════════════════════════════════════════════════════════
-    const QTABLE_Y = HDR_H + 5;
+    const SUMMARY_Y = HDR_H + 5;
+
+    const summaryTableHead = [
+      ["Average Rating", "Positive Sentiment", "Neutral Sentiment", "Negative Sentiment"]
+    ];
+    const summaryTableBody = [
+      [
+        averageRating.toFixed(1),
+        `${positivePct}%`,
+        `${neutralPct}%`,
+        `${negativePct}%`
+      ],
+      [
+        records.length.toString(),
+        sentCounts.positive.toString(),
+        sentCounts.neutral.toString(),
+        sentCounts.negative.toString()
+      ]
+    ];
+
+    doc.autoTable({
+      startY: SUMMARY_Y,
+      margin: { left: M, right: M },
+      tableWidth: CW,
+      head: summaryTableHead,
+      body: summaryTableBody,
+      styles: {
+        font: "helvetica",
+        fontSize: 9,
+        cellPadding: 6,
+        textColor: C.textDark,
+        halign: "center",
+      },
+      headStyles: {
+        fillColor: C.navy,
+        textColor: C.white,
+        fontStyle: "bold",
+      },
+      bodyStyles: {
+        fillColor: C.offWhite,
+        fontStyle: "bold",
+      },
+    });
+
+    // ══════════════════════════════════════════════════════════
+    //  SECTION C — Question breakdown table
+    // ══════════════════════════════════════════════════════════
+    const QTABLE_Y = doc.lastAutoTable.finalY + 5;
 
     // Question breakdown table
     const qTableHead = [["Response", ...Q_LABELS, "Total"]];
@@ -1660,47 +1709,11 @@ async function exportPDF() {
       alternateRowStyles: { fillColor: C.offWhite },
     });
 
-    // Overall Sentiment table
-    const sentTableY = doc.lastAutoTable.finalY + 8;
-    const sentTableHead = [["Sentiment", "Count"]];
-    const sentTableBody = [
-      ["Positive", sentCounts.positive.toString()],
-      ["Neutral", sentCounts.neutral.toString()],
-      ["Negative", sentCounts.negative.toString()],
-    ];
-    const sentTotal = sentCounts.positive + sentCounts.neutral + sentCounts.negative;
-    const sentTableFoot = [["Total", sentTotal.toString()]];
-
-    doc.autoTable({
-      startY: sentTableY,
-      margin: { left: M, right: M },
-      tableWidth: CW,
-      head: sentTableHead,
-      body: sentTableBody,
-      foot: sentTableFoot,
-      styles: {
-        font: "helvetica",
-        fontSize: 8,
-        cellPadding: 4,
-        textColor: C.textDark,
-      },
-      headStyles: {
-        fillColor: C.navy,
-        textColor: C.white,
-        fontStyle: "bold",
-      },
-      footStyles: {
-        fillColor: C.lightGrey,
-        fontStyle: "bold",
-        textColor: C.textDark,
-      },
-      alternateRowStyles: { fillColor: C.offWhite },
-    });
-
     // ══════════════════════════════════════════════════════════
-    //  SECTION C — Data table
+    //  SECTION D — Individual feedback records (Page 2+)
     // ══════════════════════════════════════════════════════════
-    const TABLE_Y = doc.lastAutoTable.finalY + 8;
+    doc.addPage(); // Start records on new page
+    const TABLE_Y = M;  // Top margin for new page
 
     // tableRows already built by _fetchExportData() above.
     // Rating column text is cleared in didParseCell; stars are
@@ -1750,8 +1763,7 @@ async function exportPDF() {
       tableWidth: CW,
       head: [
         [
-          "#",
-          "Customer",
+          "Customer #",
           "Rating",
           "Feedback Message",
           "Sentiment",
@@ -1779,7 +1791,7 @@ async function exportPDF() {
         fontSize: 7.5,
         fontStyle: "bold",
         cellPadding: { top: 4, bottom: 4, left: 5, right: 5 },
-        halign: "left",
+        halign: "center",
       },
 
       // ── Alternating rows ──────────────────────────────────
@@ -1790,22 +1802,21 @@ async function exportPDF() {
       // ── Column widths ─────────────────────────────────────
       columnStyles: {
         0: {
-          cellWidth: 14,
+          cellWidth: 36,
           halign: "center",
           textColor: C.textMuted,
           fontStyle: "normal",
           fontSize: 7.5,
-          cellPadding: { top: 3.5, bottom: 3.5, left: 2, right: 2 },
+          cellPadding: { top: 4, bottom: 4, left: 3, right: 3 },
         },
-        1: { cellWidth: 36 },
-        2: { cellWidth: 30, halign: "center" }, // text cleared — stars drawn in didDrawCell
-        3: { cellWidth: "auto" },
-        4: {
+        1: { cellWidth: 28, halign: "center" }, // text cleared — stars drawn in didDrawCell
+        2: { cellWidth: "auto" },
+        3: {
           cellWidth: 30,
           halign: "center",
           cellPadding: { top: 3.5, bottom: 3.5, left: 6, right: 6 },
         },
-        5: { cellWidth: 40, textColor: C.textMuted, fontSize: 7.5 },
+        4: { cellWidth: 40, textColor: C.textMuted, fontSize: 7.5 },
       },
 
       // ── Per-cell colouring ────────────────────────────────
@@ -1815,11 +1826,11 @@ async function exportPDF() {
         if (!rec) return;
 
         // Rating column — clear text; stars drawn in didDrawCell
-        if (data.column.index === 2) {
+        if (data.column.index === 1) {
           data.cell.text = [""]; // clear — stars rendered graphically
         }
         // Sentiment column — tinted background with rounded feel
-        if (data.column.index === 4) {
+        if (data.column.index === 3) {
           data.cell.styles.fillColor =
             sentFillPrint[rec.sentiment] || C.offWhite;
           data.cell.styles.textColor =
@@ -1829,9 +1840,9 @@ async function exportPDF() {
         }
       },
 
-      // ── Draw stars in Rating column (col 2) ────────────────
+      // ── Draw stars in Rating column (col 1) ────────────────
       didDrawCell(data) {
-        if (data.section !== "body" || data.column.index !== 2) return;
+        if (data.section !== "body" || data.column.index !== 1) return;
         const rec = records[data.row.index];
         if (!rec) return;
 
