@@ -385,6 +385,81 @@ if ($method === 'GET') {
     if ($exportCSV) {
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="feedback-export.csv"');
+
+        // Calculate summary data
+        $sqlSummary = "SELECT q1_rating, q2_rating, q3_rating, q4_rating, q5_rating, sentiment FROM feedback $whereSQL";
+        $stmtSummary = $conn->prepare($sqlSummary);
+        if ($types && $params) {
+            $stmtSummary->bind_param($types, ...$params);
+        }
+        $stmtSummary->execute();
+        $resSummary = $stmtSummary->get_result();
+
+        $questionCounts = ['q1' => [1=>0,2=>0,3=>0,4=>0,5=>0], 'q2' => [1=>0,2=>0,3=>0,4=>0,5=>0], 'q3' => [1=>0,2=>0,3=>0,4=>0,5=>0], 'q4' => [1=>0,2=>0,3=>0,4=>0,5=>0], 'q5' => [1=>0,2=>0,3=>0,4=>0,5=>0]];
+        $sentimentCounts = ['positive' => 0, 'neutral' => 0, 'negative' => 0];
+        $totalRecords = 0;
+
+        while ($row = $resSummary->fetch_assoc()) {
+            $totalRecords++;
+            for ($i = 1; $i <= 5; $i++) {
+                $rating = $row["q{$i}_rating"];
+                if ($rating >= 1 && $rating <= 5) {
+                    $questionCounts["q{$i}"][$rating]++;
+                }
+            }
+            $sentiment = $row['sentiment'];
+            if (isset($sentimentCounts[$sentiment])) {
+                $sentimentCounts[$sentiment]++;
+            }
+        }
+        $stmtSummary->close();
+
+        $out = fopen('php://output', 'w');
+
+        // Question Breakdown Section
+        fputcsv($out, ['Question Breakdown']);
+        fputcsv($out, ['Response', 'Cleanliness', 'Staff', 'Speed', 'Quality', 'Overall', 'Total']);
+        $ratingLabels = [1 => 'Very Bad', 2 => 'Bad', 3 => 'Neutral', 4 => 'Good', 5 => 'Excellent'];
+        for ($r = 1; $r <= 5; $r++) {
+            $row = [$ratingLabels[$r]];
+            $rowTotal = 0;
+            for ($q = 1; $q <= 5; $q++) {
+                $count = $questionCounts["q{$q}"][$r];
+                $row[] = $count;
+                $rowTotal += $count;
+            }
+            $row[] = $rowTotal;
+            fputcsv($out, $row);
+        }
+        // Total row
+        $totalRow = ['Total'];
+        $grandTotal = 0;
+        for ($q = 1; $q <= 5; $q++) {
+            $colTotal = array_sum($questionCounts["q{$q}"]);
+            $totalRow[] = $colTotal;
+            $grandTotal += $colTotal;
+        }
+        $totalRow[] = $grandTotal;
+        fputcsv($out, $totalRow);
+
+        // Empty row
+        fputcsv($out, []);
+
+        // Overall Sentiment Section
+        fputcsv($out, ['Overall Sentiment']);
+        fputcsv($out, ['Sentiment', 'Count']);
+        fputcsv($out, ['Positive', $sentimentCounts['positive']]);
+        fputcsv($out, ['Neutral', $sentimentCounts['neutral']]);
+        fputcsv($out, ['Negative', $sentimentCounts['negative']]);
+        fputcsv($out, ['Total', $totalRecords]);
+
+        // Empty row
+        fputcsv($out, []);
+
+        // Individual Records Section
+        fputcsv($out, ['Individual Records']);
+        fputcsv($out, ['ID', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Overall', 'Sentiment', 'Comment', 'Language', 'Submitted At']);
+
         $sql = "SELECT id, q1_rating, q2_rating, q3_rating, q4_rating, q5_rating,
                         overall_rating, sentiment, comment, language, submitted_at
                  FROM feedback $whereSQL ORDER BY submitted_at DESC";
@@ -395,8 +470,6 @@ if ($method === 'GET') {
         $stmt->execute();
         $res = $stmt->get_result();
 
-        $out = fopen('php://output', 'w');
-        fputcsv($out, ['ID', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Overall', 'Sentiment', 'Comment', 'Language', 'Submitted At']);
         while ($row = $res->fetch_assoc()) {
             fputcsv($out, [
                 $row['id'],

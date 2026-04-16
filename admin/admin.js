@@ -427,12 +427,19 @@ function buildRatingBreakdown(breakdown) {
 function buildQuestionBreakdown(questionCounts) {
   const questionNames = ["Cleanliness", "Staff", "Speed", "Quality", "Overall"];
   const labels = {
-    1: "😡 Very Bad",
-    2: "😕 Bad",
-    3: "😐 Neutral",
-    4: "🙂 Good",
-    5: "😍 Excellent",
+    1: "Very Bad",
+    2: "Bad",
+    3: "Neutral",
+    4: "Good",
+    5: "Excellent",
   };
+
+  // Calculate totals
+  const colTotals = questionNames.map((_, index) => {
+    const key = `q${index + 1}`;
+    return [1,2,3,4,5].reduce((sum, value) => sum + (questionCounts[key]?.[value] || 0), 0);
+  });
+  const grandTotal = colTotals.reduce((sum, total) => sum + total, 0);
 
   const bodyRows = [1, 2, 3, 4, 5]
     .map((value) => {
@@ -443,13 +450,24 @@ function buildQuestionBreakdown(questionCounts) {
           return `<td style="padding:10px 8px;text-align:right;color:#0f172a;font-size:13px;border-bottom:1px solid #e5e7eb">${count}</td>`;
         })
         .join("");
+      const rowTotal = questionNames.reduce((sum, _, index) => {
+        const key = `q${index + 1}`;
+        return sum + (questionCounts[key]?.[value] || 0);
+      }, 0);
 
       return `<tr>
       <td style="padding:10px 8px;color:#475569;font-size:13px;border-bottom:1px solid #e5e7eb">${labels[value]}</td>
       ${cells}
+      <td style="padding:10px 8px;text-align:right;color:#0f172a;font-size:13px;border-bottom:1px solid #e5e7eb;font-weight:600">${rowTotal}</td>
     </tr>`;
     })
     .join("");
+
+  const totalRow = `<tr style="background:#f8fafc">
+    <td style="padding:10px 8px;color:#475569;font-size:13px;border-bottom:1px solid #e5e7eb;font-weight:600">Total</td>
+    ${colTotals.map(total => `<td style="padding:10px 8px;text-align:right;color:#0f172a;font-size:13px;border-bottom:1px solid #e5e7eb;font-weight:600">${total}</td>`).join("")}
+    <td style="padding:10px 8px;text-align:right;color:#0f172a;font-size:13px;border-bottom:1px solid #e5e7eb;font-weight:600">${grandTotal}</td>
+  </tr>`;
 
   document.getElementById("questionBreakdown").innerHTML = `
     <div style="overflow-x:auto">
@@ -458,10 +476,12 @@ function buildQuestionBreakdown(questionCounts) {
           <tr>
             <th style="padding:10px 8px;text-align:left;color:#475569;font-size:12px;border-bottom:1px solid #e5e7eb">Response</th>
             ${questionNames.map((q) => `<th style="padding:10px 8px;text-align:right;color:#475569;font-size:12px;border-bottom:1px solid #e5e7eb">${q}</th>`).join("")}
+            <th style="padding:10px 8px;text-align:right;color:#475569;font-size:12px;border-bottom:1px solid #e5e7eb">Total</th>
           </tr>
         </thead>
         <tbody>
           ${bodyRows}
+          ${totalRow}
         </tbody>
       </table>
     </div>
@@ -747,11 +767,11 @@ function openModal(id) {
     <div style="display:flex;flex-direction:column;gap:7px">`;
 
   const ratingLabels = [
-    "😡 Very Bad",
-    "😕 Bad",
-    "😐 Neutral",
-    "🙂 Good",
-    "😍 Excellent",
+    "Very Bad",
+    "Bad",
+    "Neutral",
+    "Good",
+    "Excellent",
   ];
 
   qLabels.forEach((label, i) => {
@@ -1262,22 +1282,11 @@ async function exportCSV() {
     // ── 1 & 2. Fetch + map via shared helper (mirrors PDF exactly) ─
     const { records, headers, rows } = await _fetchExportData();
 
-    // ── 3. Build summary section (mirrors PDF stat-card row) ──────
+    // ── 3. Build summary section (mirrors PDF report layout) ──────
     const sentCounts = { positive: 0, neutral: 0, negative: 0 };
     records.forEach((r) => {
       if (sentCounts[r.sentiment] !== undefined) sentCounts[r.sentiment]++;
     });
-
-    const filterParts = [];
-    if (filters.search) filterParts.push(`Search: "${filters.search}"`);
-    if (filters.rating) filterParts.push(`Rating: ${filters.rating} stars`);
-    if (filters.sentiment)
-      filterParts.push(`Sentiment: ${capitalize(filters.sentiment)}`);
-    if (filters.from) filterParts.push(`From: ${filters.from}`);
-    if (filters.to) filterParts.push(`To: ${filters.to}`);
-    const filterLabel = filterParts.length
-      ? filterParts.join(" | ")
-      : "No filters applied — showing all records";
 
     const generatedAt = new Date().toLocaleString("en-US", {
       weekday: "short",
@@ -1288,33 +1297,49 @@ async function exportCSV() {
       minute: "2-digit",
     });
 
-    // ── Aggregate question totals (actual / max) ─────────────────
-    const maxScore = records.length * 5; // max possible per question
-    const qTotals = Q_LABELS.map((_, qi) =>
-      records.reduce((sum, r) => sum + (r[`q${qi + 1}_rating`] ?? 0), 0),
-    );
+    const qBreakdowns = Q_LABELS.map((_, qi) => {
+      const counts = [0, 0, 0, 0, 0];
+      records.forEach((r) => {
+        const rating = r[`q${qi + 1}_rating`];
+        if (rating >= 1 && rating <= 5) counts[rating - 1]++;
+      });
+      return counts;
+    });
 
-    // Summary rows: label in col A, value in col B
+    const rowTotals = qBreakdowns.map((_, ri) =>
+      qBreakdowns.reduce((sum, counts) => sum + counts[ri], 0),
+    );
+    const colTotals = qBreakdowns.map((counts) =>
+      counts.reduce((sum, count) => sum + count, 0),
+    );
+    const grandTotal = colTotals.reduce((sum, total) => sum + total, 0);
+
     const summaryRows = [
       ["FEEDBACK REPORT", "Feedback Kiosk · Admin Console"],
       ["Generated", generatedAt],
-      ["Active Filters", filterLabel],
       ["", ""],
-      ["SUMMARY", ""],
-      ["Total Records", records.length],
+      ["QUESTION BREAKDOWN", ""],
+      ["Response", "Cleanliness", "Staff", "Speed", "Quality", "Overall", "Total"],
+      ["Very Bad", ...qBreakdowns.map((counts) => counts[0]), rowTotals[0]],
+      ["Bad", ...qBreakdowns.map((counts) => counts[1]), rowTotals[1]],
+      ["Neutral", ...qBreakdowns.map((counts) => counts[2]), rowTotals[2]],
+      ["Good", ...qBreakdowns.map((counts) => counts[3]), rowTotals[3]],
+      ["Excellent", ...qBreakdowns.map((counts) => counts[4]), rowTotals[4]],
+      [
+        "Total",
+        ...colTotals,
+        grandTotal,
+      ],
+      ["", ""],
+      ["OVERALL SENTIMENT", ""],
+      ["Sentiment", "Count"],
       ["Positive", sentCounts.positive],
       ["Neutral", sentCounts.neutral],
       ["Negative", sentCounts.negative],
+      ["Total", records.length],
       ["", ""],
-      [
-        "QUESTION SCORES",
-        `(max ${maxScore} pts each — ${records.length} responses × 5)`,
-      ],
-      ...Q_LABELS.map((label, qi) => [
-        `Q${qi + 1} — ${label}`,
-        `${qTotals[qi]} out of ${maxScore}`,
-      ]),
-      ["", ""], // spacer before data table
+      ["INDIVIDUAL RECORDS", ""],
+      ["", ""],
     ];
 
     // ── 4. Encode to CSV (RFC 4180 — quote fields containing , " \n) ─
@@ -1432,6 +1457,19 @@ async function exportPDF() {
       if (sentCounts[r.sentiment] !== undefined) sentCounts[r.sentiment]++;
     });
 
+    // Rating labels
+    const ratingLabels = ["Very Bad", "Bad", "Neutral", "Good", "Excellent"];
+
+    // Question breakdowns
+    const qBreakdowns = Q_LABELS.map((_, qi) => {
+      const counts = [0, 0, 0, 0, 0];
+      records.forEach(r => {
+        const rating = r[`q${qi + 1}_rating`];
+        if (rating >= 1 && rating <= 5) counts[rating - 1]++;
+      });
+      return counts;
+    });
+
     // ══════════════════════════════════════════════════════════
     //  SECTION A — Dark header band  (0 → 32 mm)
     // ══════════════════════════════════════════════════════════
@@ -1480,160 +1518,97 @@ async function exportPDF() {
     );
 
     // ══════════════════════════════════════════════════════════
-    //  SECTION B — Stat cards row  (36 → 54 mm)
+    //  SECTION B — Question breakdown table
     // ══════════════════════════════════════════════════════════
-    const CARDS_Y = HDR_H + 5; // 37 mm — 5 mm breathing room below header
-    const CARD_COUNT = 4;
-    const CARD_GAP = 6;
-    const CARD_W = (CW - (CARD_COUNT - 1) * CARD_GAP) / CARD_COUNT;
-    const CARD_H = 18;
+    const QTABLE_Y = HDR_H + 5;
 
-    const cardDefs = [
-      {
-        label: "TOTAL RECORDS",
-        value: records.length.toString(),
-        accent: C.indigo,
-      },
-      {
-        label: "POSITIVE",
-        value: sentCounts.positive.toString(),
-        accent: C.green,
-      },
-      {
-        label: "NEUTRAL",
-        value: sentCounts.neutral.toString(),
-        accent: C.amber,
-      },
-      {
-        label: "NEGATIVE",
-        value: sentCounts.negative.toString(),
-        accent: C.red,
-      },
-    ];
+    // Question breakdown table
+    const qTableHead = [["Response", ...Q_LABELS, "Total"]];
 
-    cardDefs.forEach((card, i) => {
-      const cx = M + i * (CARD_W + CARD_GAP);
-
-      // Card background with subtle border
-      doc.setFillColor(...C.white);
-      doc.setDrawColor(...C.border);
-      doc.setLineWidth(0.35);
-      doc.roundedRect(cx, CARDS_Y, CARD_W, CARD_H, 2.5, 2.5, "FD");
-
-      // Left accent bar inside card (3 mm wide strip)
-      doc.setFillColor(...card.accent);
-      // Clip to rounded rect by drawing a thin rect inside left edge
-      doc.rect(cx + 0.5, CARDS_Y + 3, 2, CARD_H - 6, "F");
-
-      // Value — large, left of center
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.setTextColor(...card.accent);
-      doc.text(card.value, cx + 10, CARDS_Y + 11.5);
-
-      // Label — small caps, to the right of value
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(6.5);
-      doc.setTextColor(...C.textMuted);
-      const valWidth = doc.getTextWidth(card.value);
-      doc.text(card.label, cx + 10 + valWidth + 4, CARDS_Y + 11.5);
-    });
-
-    // ══════════════════════════════════════════════════════════
-    //  SECTION B.5 — Question score row  (below stat cards)
-    //  5 compact cells: Q1 Cleanliness … Q5 Overall
-    //  Each shows: label, filled progress bar, "actual / max"
-    // ══════════════════════════════════════════════════════════
-    const maxScore = records.length * 5;
-    const qTotals = Q_LABELS.map((_, qi) =>
-      records.reduce((sum, r) => sum + (r[`q${qi + 1}_rating`] ?? 0), 0),
+    // Calculate row totals and column totals
+    const rowTotals = ratingLabels.map((_, ri) =>
+      qBreakdowns.reduce((sum, counts) => sum + counts[ri], 0)
     );
+    const colTotals = Q_LABELS.map((_, qi) =>
+      qBreakdowns[qi].reduce((sum, count) => sum + count, 0)
+    );
+    const grandTotal = colTotals.reduce((sum, total) => sum + total, 0);
 
-    const QROW_Y = CARDS_Y + CARD_H + 4; // 4 mm gap below stat cards
-    const QROW_H = 14;
-    const QCARD_GAP = 4;
-    const QCARD_W = (CW - 4 * QCARD_GAP) / 5;
-    // Bar geometry inside each question card
-    const QBAR_H = 2.5;
-    const QBAR_PAD = 6; // horizontal padding inside card
+    const qTableBody = ratingLabels.map((label, ri) => [
+      label,
+      ...qBreakdowns.map(counts => counts[ri].toString()),
+      rowTotals[ri].toString()
+    ]);
 
-    Q_LABELS.forEach((label, qi) => {
-      const qx = M + qi * (QCARD_W + QCARD_GAP);
-      const actual = qTotals[qi];
-      const fillPct = maxScore > 0 ? actual / maxScore : 0;
-      // Bar colour: same scale as modal (red→orange→amber→blue→green)
-      const qBarColors = [C.red, [180, 95, 20], C.amber, C.accent, C.green];
-      // Pick colour by ratio: 0-20%=red, 21-40%=orange, 41-60%=amber, 61-80%=blue, 81-100%=green
-      const colorIdx = Math.min(4, Math.floor(fillPct * 5));
-      const barColor = qBarColors[colorIdx];
+    const qTableFoot = [["Total", ...colTotals.map(t => t.toString()), grandTotal.toString()]];
 
-      // Card background
-      doc.setFillColor(...C.white);
-      doc.setDrawColor(...C.border);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(qx, QROW_Y, QCARD_W, QROW_H, 2, 2, "FD");
+    doc.autoTable({
+      startY: QTABLE_Y,
+      margin: { left: M, right: M },
+      tableWidth: CW,
+      head: qTableHead,
+      body: qTableBody,
+      foot: qTableFoot,
+      styles: {
+        font: "helvetica",
+        fontSize: 8,
+        cellPadding: 4,
+        textColor: C.textDark,
+      },
+      headStyles: {
+        fillColor: C.navy,
+        textColor: C.white,
+        fontStyle: "bold",
+      },
+      footStyles: {
+        fillColor: C.lightGrey,
+        fontStyle: "bold",
+        textColor: C.textDark,
+      },
+      alternateRowStyles: { fillColor: C.offWhite },
+    });
 
-      // Question label
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(6);
-      doc.setTextColor(...C.textMuted);
-      doc.text(
-        `Q${qi + 1} — ${label.toUpperCase()}`,
-        qx + QBAR_PAD,
-        QROW_Y + 4.2,
-      );
+    // Overall Sentiment table
+    const sentTableY = doc.lastAutoTable.finalY + 8;
+    const sentTableHead = [["Sentiment", "Count"]];
+    const sentTableBody = [
+      ["Positive", sentCounts.positive.toString()],
+      ["Neutral", sentCounts.neutral.toString()],
+      ["Negative", sentCounts.negative.toString()],
+    ];
+    const sentTotal = sentCounts.positive + sentCounts.neutral + sentCounts.negative;
+    const sentTableFoot = [["Total", sentTotal.toString()]];
 
-      // Score "actual / max" — bold, accent colour
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
-      doc.setTextColor(...barColor);
-      doc.text(`${actual} / ${maxScore}`, qx + QBAR_PAD, QROW_Y + 9.2);
-
-      // Progress bar track
-      const barX = qx + QBAR_PAD;
-      const barW = QCARD_W - QBAR_PAD * 2;
-      doc.setFillColor(...C.lightGrey);
-      doc.roundedRect(barX, QROW_Y + QROW_H - 3.8, barW, QBAR_H, 1, 1, "F");
-      // Progress bar fill
-      if (fillPct > 0) {
-        doc.setFillColor(...barColor);
-        doc.roundedRect(
-          barX,
-          QROW_Y + QROW_H - 3.8,
-          barW * fillPct,
-          QBAR_H,
-          1,
-          1,
-          "F",
-        );
-      }
+    doc.autoTable({
+      startY: sentTableY,
+      margin: { left: M, right: M },
+      tableWidth: CW,
+      head: sentTableHead,
+      body: sentTableBody,
+      foot: sentTableFoot,
+      styles: {
+        font: "helvetica",
+        fontSize: 8,
+        cellPadding: 4,
+        textColor: C.textDark,
+      },
+      headStyles: {
+        fillColor: C.navy,
+        textColor: C.white,
+        fontStyle: "bold",
+      },
+      footStyles: {
+        fillColor: C.lightGrey,
+        fontStyle: "bold",
+        textColor: C.textDark,
+      },
+      alternateRowStyles: { fillColor: C.offWhite },
     });
 
     // ══════════════════════════════════════════════════════════
-    //  SECTION C — Filter bar
+    //  SECTION C — Data table
     // ══════════════════════════════════════════════════════════
-    const FILTER_Y = QROW_Y + QROW_H + 4; // 4 mm below question row
-    const FILTER_H = 8;
-
-    doc.setFillColor(...C.lightGrey);
-    doc.setDrawColor(...C.border);
-    doc.setLineWidth(0.25);
-    doc.roundedRect(M, FILTER_Y, CW, FILTER_H, 2, 2, "FD");
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(...C.textMuted);
-    doc.text("Active Filters:", M + 5, FILTER_Y + 5.2);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.setTextColor(...C.textBody);
-    doc.text(filterLabel, M + 28, FILTER_Y + 5.2);
-
-    // ══════════════════════════════════════════════════════════
-    //  SECTION D — Data table
-    // ══════════════════════════════════════════════════════════
-    const TABLE_Y = FILTER_Y + FILTER_H + 5;
+    const TABLE_Y = doc.lastAutoTable.finalY + 8;
 
     // tableRows already built by _fetchExportData() above.
     // Rating column text is cleared in didParseCell; stars are
