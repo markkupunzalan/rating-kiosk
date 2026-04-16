@@ -339,7 +339,7 @@
       <!-- /topbar -->
 
       <!-- ── Page Content Wrapper ── -->
-      <div style="padding: 28px 28px 40px; flex: 1">
+      <div style="padding: 20px 20px 24px; flex: 1">
         <!-- ══════════════════════════════════════════
          PAGE: DASHBOARD OVERVIEW
     ══════════════════════════════════════════ -->
@@ -349,7 +349,7 @@
               display: flex;
               align-items: flex-end;
               justify-content: space-between;
-              margin-bottom: 24px;
+              margin-bottom: 16px;
             "
           >
             <div>
@@ -387,8 +387,8 @@
             style="
               display: grid;
               grid-template-columns: repeat(5, 1fr);
-              gap: 16px;
-              margin-bottom: 24px;
+              gap: 12px;
+              margin-bottom: 16px;
             "
           >
             <!-- Total Feedback -->
@@ -509,8 +509,8 @@
             style="
               display: grid;
               grid-template-columns: 2fr 1fr;
-              gap: 16px;
-              margin-bottom: 24px;
+              gap: 12px;
+              margin-bottom: 16px;
             "
           >
             <!-- Line Chart -->
@@ -618,8 +618,8 @@
             style="
               display: grid;
               grid-template-columns: 1fr;
-              gap: 16px;
-              margin-bottom: 24px;
+              gap: 12px;
+              margin-bottom: 16px;
             "
           >
             <div class="chart-card">
@@ -632,74 +632,35 @@
           </div>
 
           <!-- Bottom Row -->
-          <div style="display: grid; grid-template-columns: 3fr 2fr; gap: 16px">
-            <!-- Recent Feedback Mini-Table -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
+            <!-- Overall Response Labels -->
             <div class="chart-card">
+              <div class="chart-title" style="margin-bottom: 4px">
+                Overall Response Labels
+              </div>
+              <div class="chart-subtitle">
+                Count of all question ratings across the dataset
+              </div>
               <div
+                id="ratingBreakdown"
                 style="
                   display: flex;
-                  align-items: center;
-                  justify-content: space-between;
-                  margin-bottom: 16px;
+                  flex-direction: column;
+                  gap: 10px;
+                  margin-top: 8px;
                 "
-              >
-                <div>
-                  <div class="chart-title" style="margin: 0">
-                    Recent Feedback
-                  </div>
-                  <div class="chart-subtitle" style="margin: 0">
-                    Latest 5 submissions
-                  </div>
-                </div>
-                <button
-                  class="btn-secondary"
-                  onclick="navigate('feedback')"
-                  style="font-size: 12px; padding: 6px 12px"
-                >
-                  View All →
-                </button>
-              </div>
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Rating</th>
-                    <th>Message</th>
-                    <th>Sentiment</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody id="recentFeedbackBody"></tbody>
-              </table>
+              ></div>
             </div>
 
-            <div style="display: flex; flex-direction: column; gap: 16px">
-              <div class="chart-card">
-                <div class="chart-title" style="margin-bottom: 4px">
-                  Overall Response Labels
-                </div>
-                <div class="chart-subtitle">
-                  Count of all question ratings across the dataset
-                </div>
-                <div
-                  id="ratingBreakdown"
-                  style="
-                    display: flex;
-                    flex-direction: column;
-                    gap: 10px;
-                    margin-top: 8px;
-                  "
-                ></div>
+            <!-- Question Label Breakdown -->
+            <div class="chart-card">
+              <div class="chart-title" style="margin-bottom: 4px">
+                Question Label Breakdown
               </div>
-
-              <div class="chart-card">
-                <div class="chart-title" style="margin-bottom: 4px">
-                  Question Label Breakdown
-                </div>
-                <div class="chart-subtitle">
-                  Counts by label for each question
-                </div>
-                <div id="questionBreakdown" style="margin-top: 12px"></div>
+              <div class="chart-subtitle">
+                Counts by label for each question
               </div>
+              <div id="questionBreakdown" style="margin-top: 12px"></div>
             </div>
           </div>
           <!-- /Bottom Row -->

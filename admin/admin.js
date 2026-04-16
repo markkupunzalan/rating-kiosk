@@ -276,7 +276,6 @@ async function initDashboard(silent = false) {
     // ── Charts ───────────────────────────────────────────────
     buildLineChart(data.trend, isToday);
     buildPieChart(s.positive, s.neutral, s.negative);
-    buildRecentTable(data.recent);
     buildRatingBreakdown(data.rating_label_counts || data.rating_breakdown);
     buildQuestionBreakdown(data.question_label_counts || {});
     buildHourlyChart(data.hourly);
@@ -385,29 +384,6 @@ function buildPieChart(pos, neu, neg) {
   });
 }
 
-/* ── Recent Feedback Mini-Table ──────────────────────────── */
-function buildRecentTable(recent) {
-  document.getElementById("recentFeedbackBody").innerHTML = recent
-    .map(
-      (f) => `
-    <tr>
-      <td>${renderStars(Math.round(f.overall_rating))}</td>
-      <td>
-        <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;font-size:13px">
-          ${escHtml(f.comment) || '<span style="color:#d1d5db;font-style:italic">No comment</span>'}
-        </div>
-      </td>
-      <td><span class="sentiment-badge sentiment-${f.sentiment}">
-        ${sentimentDot(f.sentiment)}${capitalize(f.sentiment)}
-      </span></td>
-      <td style="font-size:12px;color:#9ca3af;white-space:nowrap;font-family:'DM Mono',monospace">
-        ${formatDate(new Date(f.submitted_at))}
-      </td>
-    </tr>
-  `,
-    )
-    .join("");
-}
 
 /* ── Rating Breakdown Bars ───────────────────────────────── */
 function buildRatingBreakdown(breakdown) {
@@ -1336,7 +1312,7 @@ async function exportCSV() {
       ],
       ...Q_LABELS.map((label, qi) => [
         `Q${qi + 1} — ${label}`,
-        `${qTotals[qi]} / ${maxScore}`,
+        `${qTotals[qi]} out of ${maxScore}`,
       ]),
       ["", ""], // spacer before data table
     ];

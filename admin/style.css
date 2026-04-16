@@ -171,7 +171,7 @@ body {
   background: #ffffff;
   border: 1px solid #e8edf3;
   border-radius: 12px;
-  padding: 16px 18px;
+  padding: 12px 14px;
   transition: all 0.22s ease;
   position: relative;
   overflow: hidden;
@@ -184,14 +184,14 @@ body {
 }
 
 .metric-card .icon-wrap {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .metric-value {
@@ -218,7 +218,7 @@ body {
   background: #ffffff;
   border: 1px solid #e8edf3;
   border-radius: 12px;
-  padding: 18px 20px;
+  padding: 16px;
 }
 
 .chart-title {
@@ -231,7 +231,7 @@ body {
 .chart-subtitle {
   font-size: 11px;
   color: #9ca3af;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 /* ============================================================
@@ -263,7 +263,7 @@ body {
 }
 
 .data-table td {
-  padding: 10px 14px;
+  padding: 8px 12px;
   font-size: 12.5px;
   color: #374151;
   border-bottom: 1px solid #f1f4f8;

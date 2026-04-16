@@ -66,7 +66,7 @@ function api_req($endpoint, $data = [], $method = "POST", $cookies = '') {
     $headerStr = substr($response, 0, $header_size);
     $body = substr($response, $header_size);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+    unset($ch); // curl_close is deprecated, let GC handle it
     
     // Parse cookies from response
     preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $headerStr, $matches);
