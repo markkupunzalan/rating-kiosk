@@ -384,7 +384,6 @@ function buildPieChart(pos, neu, neg) {
   });
 }
 
-
 /* ── Rating Breakdown Bars ───────────────────────────────── */
 function buildRatingBreakdown(breakdown) {
   const labels = {
@@ -437,7 +436,10 @@ function buildQuestionBreakdown(questionCounts) {
   // Calculate totals
   const colTotals = questionNames.map((_, index) => {
     const key = `q${index + 1}`;
-    return [1,2,3,4,5].reduce((sum, value) => sum + (questionCounts[key]?.[value] || 0), 0);
+    return [1, 2, 3, 4, 5].reduce(
+      (sum, value) => sum + (questionCounts[key]?.[value] || 0),
+      0,
+    );
   });
   const grandTotal = colTotals.reduce((sum, total) => sum + total, 0);
 
@@ -465,7 +467,7 @@ function buildQuestionBreakdown(questionCounts) {
 
   const totalRow = `<tr style="background:#f8fafc">
     <td style="padding:10px 8px;color:#475569;font-size:13px;border-bottom:1px solid #e5e7eb;font-weight:600">Total</td>
-    ${colTotals.map(total => `<td style="padding:10px 8px;text-align:right;color:#0f172a;font-size:13px;border-bottom:1px solid #e5e7eb;font-weight:600">${total}</td>`).join("")}
+    ${colTotals.map((total) => `<td style="padding:10px 8px;text-align:right;color:#0f172a;font-size:13px;border-bottom:1px solid #e5e7eb;font-weight:600">${total}</td>`).join("")}
     <td style="padding:10px 8px;text-align:right;color:#0f172a;font-size:13px;border-bottom:1px solid #e5e7eb;font-weight:600">${grandTotal}</td>
   </tr>`;
 
@@ -753,19 +755,14 @@ function openModal(id) {
     </div>
     <div style="display:flex;flex-direction:column;gap:7px">`;
 
-  const ratingLabels = [
-    "Very Bad",
-    "Bad",
-    "Neutral",
-    "Good",
-    "Excellent",
-  ];
+  const ratingLabels = ["Very Bad", "Bad", "Neutral", "Good", "Excellent"];
 
   qLabels.forEach((label, i) => {
     const val = qValues[i] || 0;
     const colors = ["#ef4444", "#f97316", "#f59e0b", "#3b82f6", "#10b981"];
     const color = colors[val - 1] || "#d1d5db";
-    const labelText = val >= 1 && val <= 5 ? ratingLabels[val - 1] : "No rating";
+    const labelText =
+      val >= 1 && val <= 5 ? ratingLabels[val - 1] : "No rating";
     questionHTML += `
       <div style="display:flex;align-items:center;gap:10px">
         <div style="font-size:11.5px;color:#6b7280;width:76px">${label}</div>
@@ -894,7 +891,8 @@ async function initSettingsPage() {
 
     // Restore logo preview from the saved URL (relative path or data URI)
     if (data.logo_url) {
-      const isExternal = data.logo_url.startsWith("http") || data.logo_url.startsWith("data:");
+      const isExternal =
+        data.logo_url.startsWith("http") || data.logo_url.startsWith("data:");
       const previewSrc = isExternal ? data.logo_url : "../" + data.logo_url;
       const previewName = data.logo_url.startsWith("data:")
         ? "Uploaded logo"
@@ -997,19 +995,19 @@ async function handleLogoFileChange(input) {
 /** Show/update the logo preview panel. */
 function showLogoPreview(src, name) {
   const wrap = document.getElementById("logo-preview-wrap");
-  const img  = document.getElementById("logo-preview-img");
+  const img = document.getElementById("logo-preview-img");
   const nameEl = document.getElementById("logo-preview-name");
 
-  if (img)    img.src = src;
+  if (img) img.src = src;
   if (nameEl) nameEl.textContent = name || "";
-  if (wrap)   wrap.style.display = "flex";
+  if (wrap) wrap.style.display = "flex";
 }
 
 /** Hide the preview panel (used when removing the logo). */
 function hideLogoPreview() {
   const wrap = document.getElementById("logo-preview-wrap");
-  const img  = document.getElementById("logo-preview-img");
-  if (img)  img.src = "";
+  const img = document.getElementById("logo-preview-img");
+  if (img) img.src = "";
   if (wrap) wrap.style.display = "none";
 }
 
@@ -1382,8 +1380,10 @@ async function exportCSV() {
     });
 
     const averageRating = records.length
-      ? records.reduce((sum, r) => sum + (parseFloat(r.overall_rating) || 0), 0) /
-        records.length
+      ? records.reduce(
+          (sum, r) => sum + (parseFloat(r.overall_rating) || 0),
+          0,
+        ) / records.length
       : 0;
     const positivePct = records.length
       ? Math.round((sentCounts.positive / records.length) * 100)
@@ -1417,22 +1417,41 @@ async function exportCSV() {
       ["Generated", generatedAt],
       ["", ""],
       ["SUMMARY", ""],
-      ["Average Rating", "Positive Sentiment", "Neutral Sentiment", "Negative Sentiment"],
-      [averageRating.toFixed(1), `${positivePct}%`, `${neutralPct}%`, `${negativePct}%`],
-      [records.length, sentCounts.positive, sentCounts.neutral, sentCounts.negative],
+      [
+        "Average Rating",
+        "Positive Sentiment",
+        "Neutral Sentiment",
+        "Negative Sentiment",
+      ],
+      [
+        averageRating.toFixed(1),
+        `${positivePct}%`,
+        `${neutralPct}%`,
+        `${negativePct}%`,
+      ],
+      [
+        records.length,
+        sentCounts.positive,
+        sentCounts.neutral,
+        sentCounts.negative,
+      ],
       ["", ""],
       ["QUESTION BREAKDOWN", ""],
-      ["Response", "Cleanliness", "Staff", "Speed", "Quality", "Overall", "Total"],
+      [
+        "Response",
+        "Cleanliness",
+        "Staff",
+        "Speed",
+        "Quality",
+        "Overall",
+        "Total",
+      ],
       ["Very Bad", ...qBreakdowns.map((counts) => counts[0]), rowTotals[0]],
       ["Bad", ...qBreakdowns.map((counts) => counts[1]), rowTotals[1]],
       ["Neutral", ...qBreakdowns.map((counts) => counts[2]), rowTotals[2]],
       ["Good", ...qBreakdowns.map((counts) => counts[3]), rowTotals[3]],
       ["Excellent", ...qBreakdowns.map((counts) => counts[4]), rowTotals[4]],
-      [
-        "Total",
-        ...colTotals,
-        grandTotal,
-      ],
+      ["Total", ...colTotals, grandTotal],
       ["", ""],
       ["INDIVIDUAL RECORDS", ""],
       ["", ""],
@@ -1564,7 +1583,7 @@ async function exportPDF() {
     // Question breakdowns
     const qBreakdowns = Q_LABELS.map((_, qi) => {
       const counts = [0, 0, 0, 0, 0];
-      records.forEach(r => {
+      records.forEach((r) => {
         const rating = r[`q${qi + 1}_rating`];
         if (rating >= 1 && rating <= 5) counts[rating - 1]++;
       });
@@ -1611,34 +1630,34 @@ async function exportPDF() {
     // Record count summary — right-aligned, smaller
     doc.setFontSize(7.5);
     doc.setTextColor(...C.textLight);
-    doc.text(
-      filterLabel,
-      PW - M,
-      20,
-      { align: "right" },
-    );
+    doc.text(filterLabel, PW - M, 20, { align: "right" });
 
     // ══════════════════════════════════════════════════════════
-    //  SECTION B — Summary metrics table  
+    //  SECTION B — Summary metrics table
     // ══════════════════════════════════════════════════════════
     const SUMMARY_Y = HDR_H + 5;
 
     const summaryTableHead = [
-      ["Average Rating", "Positive Sentiment", "Neutral Sentiment", "Negative Sentiment"]
+      [
+        "Average Rating",
+        "Positive Sentiment",
+        "Neutral Sentiment",
+        "Negative Sentiment",
+      ],
     ];
     const summaryTableBody = [
       [
         averageRating.toFixed(1),
         `${positivePct}%`,
         `${neutralPct}%`,
-        `${negativePct}%`
+        `${negativePct}%`,
       ],
       [
         records.length.toString(),
         sentCounts.positive.toString(),
         sentCounts.neutral.toString(),
-        sentCounts.negative.toString()
-      ]
+        sentCounts.negative.toString(),
+      ],
     ];
 
     doc.autoTable({
@@ -1675,20 +1694,22 @@ async function exportPDF() {
 
     // Calculate row totals and column totals
     const rowTotals = ratingLabels.map((_, ri) =>
-      qBreakdowns.reduce((sum, counts) => sum + counts[ri], 0)
+      qBreakdowns.reduce((sum, counts) => sum + counts[ri], 0),
     );
     const colTotals = Q_LABELS.map((_, qi) =>
-      qBreakdowns[qi].reduce((sum, count) => sum + count, 0)
+      qBreakdowns[qi].reduce((sum, count) => sum + count, 0),
     );
     const grandTotal = colTotals.reduce((sum, total) => sum + total, 0);
 
     const qTableBody = ratingLabels.map((label, ri) => [
       label,
-      ...qBreakdowns.map(counts => counts[ri].toString()),
-      rowTotals[ri].toString()
+      ...qBreakdowns.map((counts) => counts[ri].toString()),
+      rowTotals[ri].toString(),
     ]);
 
-    const qTableFoot = [["Total", ...colTotals.map(t => t.toString()), grandTotal.toString()]];
+    const qTableFoot = [
+      ["Total", ...colTotals.map((t) => t.toString()), grandTotal.toString()],
+    ];
 
     doc.autoTable({
       startY: QTABLE_Y,
@@ -1720,7 +1741,7 @@ async function exportPDF() {
     //  SECTION D — Individual feedback records (Page 2+)
     // ══════════════════════════════════════════════════════════
     doc.addPage(); // Start records on new page
-    const TABLE_Y = M;  // Top margin for new page
+    const TABLE_Y = M; // Top margin for new page
 
     // tableRows already built by _fetchExportData() above.
     // Rating column text is cleared in didParseCell; stars are
