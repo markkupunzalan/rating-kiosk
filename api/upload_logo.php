@@ -3,9 +3,9 @@
  * upload_logo.php — Logo image upload endpoint
  *
  * POST /api/upload_logo.php  (multipart/form-data, field: "logo")
- *   → Saves the uploaded image to /uploads/ and stores the relative URL
- *     in the settings table under the key 'logo_url'.
- *   → Returns: { success: true, logo_url: "uploads/logo_xxx.png" }
+ *   → Converts the uploaded image to a base64 data URI and stores it
+ *     in the settings table. Does NOT save to disk.
+ *   → Returns: { success: true, logo_url: "data:image/png;base64,..." }
  */
 
 require_once __DIR__ . '/authMiddleware.php';

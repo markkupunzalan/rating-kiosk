@@ -892,11 +892,14 @@ async function initSettingsPage() {
 
     setToggle("setting-anonymous-feedback", data.anonymous_feedback);
 
-    // Restore logo preview from the saved URL (relative path served from root)
+    // Restore logo preview from the saved URL (relative path or data URI)
     if (data.logo_url) {
-      const isHttp = data.logo_url.startsWith("http");
-      const previewSrc = isHttp ? data.logo_url : "../" + data.logo_url;
-      showLogoPreview(previewSrc, data.logo_url.split("/").pop());
+      const isExternal = data.logo_url.startsWith("http") || data.logo_url.startsWith("data:");
+      const previewSrc = isExternal ? data.logo_url : "../" + data.logo_url;
+      const previewName = data.logo_url.startsWith("data:")
+        ? "Uploaded logo"
+        : data.logo_url.split("/").pop();
+      showLogoPreview(previewSrc, previewName);
     }
 
     // Re-sync username display in the Change Username section
@@ -973,7 +976,11 @@ async function handleLogoFileChange(input) {
 
     // Update preview name to reflect the saved filename
     const nameEl = document.getElementById("logo-preview-name");
-    if (nameEl) nameEl.textContent = data.logo_url.split("/").pop();
+    if (nameEl) {
+      nameEl.textContent = data.logo_url.startsWith("data:")
+        ? file.name
+        : data.logo_url.split("/").pop();
+    }
 
     showToast("Logo uploaded successfully ✓");
   } catch (err) {

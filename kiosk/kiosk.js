@@ -272,9 +272,10 @@
         if (logoWrap && logoImg) {
           logoImg.onload = () => { logoWrap.style.display = "flex"; };
           logoImg.onerror = () => { logoWrap.style.display = "none"; };
-          // Use root-relative or base-relative path so it resolves to /uploads/ correctly
-          // since the kiosk is in the /kiosk/ directory
-          logoImg.src = s.logo_url.startsWith("http") ? s.logo_url : "../" + s.logo_url;
+          // Use root-relative or base-relative path so it resolves correctly.
+          // Accept both regular URLs and data URI values.
+          const isExternal = s.logo_url.startsWith("http") || s.logo_url.startsWith("data:");
+          logoImg.src = isExternal ? s.logo_url : "../" + s.logo_url;
           logoImg.alt = (s.business_name || "Business") + " logo";
         }
       }
