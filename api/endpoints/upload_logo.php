@@ -8,12 +8,12 @@
  *   → Returns: { success: true, logo_url: "data:image/png;base64,..." }
  */
 
-require_once __DIR__ . '/authMiddleware.php';
-header('Content-Type: application/json');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit; }
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -29,9 +29,9 @@ if (empty($_FILES['logo']) || $_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
     exit;
 }
 
-$file     = $_FILES['logo'];
+$file = $_FILES['logo'];
 $mimeType = mime_content_type($file['tmp_name']);
-$allowed  = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
+$allowed = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
 
 if (!in_array($mimeType, $allowed, true)) {
     http_response_code(415);
@@ -47,11 +47,11 @@ if ($file['size'] > 5 * 1024 * 1024) {
 }
 
 // Build a safe filename
-$ext      = pathinfo($file['name'], PATHINFO_EXTENSION);
-$ext      = preg_replace('/[^a-zA-Z0-9]/', '', $ext); // strip weird chars
+$ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+$ext = preg_replace('/[^a-zA-Z0-9]/', '', $ext); // strip weird chars
 $filename = 'logo_' . bin2hex(random_bytes(8)) . '.' . strtolower($ext);
 
-$uploadDir = __DIR__ . '/../uploads/';
+$uploadDir = dirname(__DIR__, 2) . '/uploads/';
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
 }
@@ -68,7 +68,6 @@ if (!move_uploaded_file($file['tmp_name'], $destination)) {
 $logoUrl = 'uploads/' . $filename;
 
 // Persist to the settings table
-require_once __DIR__ . '/db.php';
 
 $stmt = $conn->prepare(
     "INSERT INTO settings (setting_key, setting_value)

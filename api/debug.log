@@ -1,0 +1,4 @@
+[17-Apr-2026 09:50:30 Europe/Berlin] Session ID: vs3gtkl3ebuqqmvrkfeu5vajsv | Logged in: NO | Route: login.php
+[17-Apr-2026 09:50:30 Europe/Berlin] [SECURITY WARNING] FeedbackIQ: Default HMAC secret is in use. Set KIOSK_HMAC_SECRET in your .env or server environment before deploying to production.
+[17-Apr-2026 09:50:30 Europe/Berlin] Session ID: ivf7djlf1p9ravd1car13kbfur | Logged in: YES | Route: authCheck.php
+[17-Apr-2026 09:50:30 Europe/Berlin] [SECURITY WARNING] FeedbackIQ: Default HMAC secret is in use. Set KIOSK_HMAC_SECRET in your .env or server environment before deploying to production.

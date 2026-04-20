@@ -3,10 +3,7 @@
  * api/change_password.php — Change admin password
  * Requires an active session. Verifies current password, then saves new hash.
  */
-require_once __DIR__ . '/authMiddleware.php';
-header('Content-Type: application/json');
 
-require_once __DIR__ . '/db.php';
 
 
 // ── Method guard ──────────────────────────────────────────────

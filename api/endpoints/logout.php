@@ -2,7 +2,6 @@
 /**
  * api/logout.php — Destroys admin session
  */
-session_start();
 
 // Unset all session variables
 $_SESSION = array();
@@ -32,7 +31,6 @@ if (isset($_COOKIE['admin_remember_token'])) {
 
 // Support AJAX calls or direct navigation
 if (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) {
-    header('Content-Type: application/json');
     echo json_encode(['success' => true]);
 } else {
     header("Location: ../admin/login.html");

@@ -6,15 +6,12 @@
  * POST /api/settings.php   → updates key-value pairs
  */
 
-require_once __DIR__ . '/authMiddleware.php';
-header('Content-Type: application/json');
 // SEC-2 FIX: Removed wildcard CORS — admin-only endpoint
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit; }
 
-require_once __DIR__ . '/db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 

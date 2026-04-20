@@ -44,15 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setLoading(true);
 
     try {
-      const formData = new URLSearchParams();
-      formData.append('email', email);
-
       const response = await fetch('../api/forgot_password.php', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/json'
         },
-        body: formData.toString()
+        body: JSON.stringify({ email })
       });
 
       // Handle potential HTML response gracefully instead of crashing

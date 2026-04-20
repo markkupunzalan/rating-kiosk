@@ -120,15 +120,11 @@ body {
    TOPBAR
    ============================================================ */
 #topbar {
-  background: #ffffff;
-  border-bottom: 1px solid #e5eaf0;
+  background: transparent;
   padding: 0 20px;
-  height: 50px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
   z-index: 40;
 }
 
@@ -637,6 +633,10 @@ input:checked+.toggle-slider::before {
    RESPONSIVE — MOBILE
    ============================================================ */
 @media (max-width: 768px) {
+  #topbar {
+    padding-top: 16px;
+  }
+
   #sidebar {
     transform: translateX(-100%);
   }

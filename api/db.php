@@ -26,7 +26,7 @@ if ($conn->connect_error) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error'   => 'Database connection failed',
+        'error' => 'Database connection failed',
     ]);
     exit;
 }
@@ -36,11 +36,11 @@ $conn->set_charset('utf8mb4');
 // ── 3. Align MySQL session timezone to match PHP ──────────────
 // Convert PHP DateTimeZone offset to the ±HH:MM format MySQL expects.
 // Example: Asia/Manila → +08:00
-$offset  = (new DateTimeZone($appTimezone))->getOffset(new DateTime());
-$sign    = $offset >= 0 ? '+' : '-';
-$abs     = abs($offset);
-$hours   = intdiv($abs, 3600);
+$offset = (new DateTimeZone($appTimezone))->getOffset(new DateTime());
+$sign = $offset >= 0 ? '+' : '-';
+$abs = abs($offset);
+$hours = intdiv($abs, 3600);
 $minutes = ($abs % 3600) / 60;
-$tzStr   = sprintf('%s%02d:%02d', $sign, $hours, $minutes);
+$tzStr = sprintf('%s%02d:%02d', $sign, $hours, $minutes);
 
 $conn->query("SET time_zone = '{$tzStr}'");

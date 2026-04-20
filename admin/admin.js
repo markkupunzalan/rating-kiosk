@@ -64,14 +64,22 @@ window.addEventListener("resize", () => {
 
 /* ── Topbar helpers ──────────────────────────────────────── */
 function setTopbarDate() {
-  const opts = {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  const updateDate = () => {
+    const opts = {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    };
+    const el = document.getElementById("topbar-date");
+    if (el) el.textContent = new Date().toLocaleString("en-US", opts).replace(", ", " • ");
   };
-  document.getElementById("topbar-date").textContent =
-    new Date().toLocaleDateString("en-US", opts);
+
+  updateDate();
+  setInterval(updateDate, 60000);
 }
 
 /**
@@ -437,7 +445,7 @@ function buildQuestionBreakdown(questionCounts) {
   // Calculate totals
   const colTotals = questionNames.map((_, index) => {
     const key = `q${index + 1}`;
-    return [1,2,3,4,5].reduce((sum, value) => sum + (questionCounts[key]?.[value] || 0), 0);
+    return [1, 2, 3, 4, 5].reduce((sum, value) => sum + (questionCounts[key]?.[value] || 0), 0);
   });
   const grandTotal = colTotals.reduce((sum, total) => sum + total, 0);
 
@@ -855,13 +863,13 @@ function chartBaseOptions({ legend = true, legendPos = "bottom" } = {}) {
     plugins: {
       legend: legend
         ? {
-            position: legendPos,
-            labels: {
-              font: { size: 11, family: "DM Sans" },
-              usePointStyle: true,
-              pointStyleWidth: 8,
-            },
-          }
+          position: legendPos,
+          labels: {
+            font: { size: 11, family: "DM Sans" },
+            usePointStyle: true,
+            pointStyleWidth: 8,
+          },
+        }
         : { display: false },
     },
     scales: {
@@ -997,19 +1005,19 @@ async function handleLogoFileChange(input) {
 /** Show/update the logo preview panel. */
 function showLogoPreview(src, name) {
   const wrap = document.getElementById("logo-preview-wrap");
-  const img  = document.getElementById("logo-preview-img");
+  const img = document.getElementById("logo-preview-img");
   const nameEl = document.getElementById("logo-preview-name");
 
-  if (img)    img.src = src;
+  if (img) img.src = src;
   if (nameEl) nameEl.textContent = name || "";
-  if (wrap)   wrap.style.display = "flex";
+  if (wrap) wrap.style.display = "flex";
 }
 
 /** Hide the preview panel (used when removing the logo). */
 function hideLogoPreview() {
   const wrap = document.getElementById("logo-preview-wrap");
-  const img  = document.getElementById("logo-preview-img");
-  if (img)  img.src = "";
+  const img = document.getElementById("logo-preview-img");
+  if (img) img.src = "";
   if (wrap) wrap.style.display = "none";
 }
 
@@ -1383,7 +1391,7 @@ async function exportCSV() {
 
     const averageRating = records.length
       ? records.reduce((sum, r) => sum + (parseFloat(r.overall_rating) || 0), 0) /
-        records.length
+      records.length
       : 0;
     const positivePct = records.length
       ? Math.round((sentCounts.positive / records.length) * 100)
@@ -1463,7 +1471,7 @@ async function exportCSV() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    showToast("CSV report downloaded ✓");
+    showToast("CSV report downloaded");
   } catch (err) {
     showToast("CSV export failed: " + err.message, true);
   } finally {
@@ -1546,7 +1554,7 @@ async function exportPDF() {
 
     const averageRating = records.length
       ? records.reduce((sum, r) => sum + Number(r.overall_rating || 0), 0) /
-        records.length
+      records.length
       : 0;
     const positivePct = records.length
       ? Math.round((sentCounts.positive / records.length) * 100)
@@ -1914,7 +1922,7 @@ async function exportPDF() {
     // ── 5. Save ───────────────────────────────────────────────
     const dateTag = new Date().toISOString().slice(0, 10);
     doc.save(`feedback-report-${dateTag}.pdf`);
-    showToast("PDF report downloaded ✓");
+    showToast("PDF report downloaded");
   } catch (err) {
     showToast("PDF export failed: " + err.message, true);
   } finally {

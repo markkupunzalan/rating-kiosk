@@ -17,7 +17,6 @@
  *   "Today" always means today in the user's timezone, not the server's.
  */
 
-header('Content-Type: application/json');
 // SEC-2 FIX: Removed wildcard CORS — analytics is an auth-gated admin endpoint.
 // The authMiddleware below will reject unauthenticated requests anyway, but the
 // wildcard header would still allow cross-origin credential requests to be attempted.
@@ -35,8 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 // db.php sets date_default_timezone_set() AND MySQL session timezone
-require_once __DIR__ . '/authMiddleware.php';
-require_once __DIR__ . '/db.php';
 
 // ── Parse & validate the `days` parameter ───────────────────
 // 0  = Today preset
@@ -211,17 +208,22 @@ $questionLabelCounts = [
 ];
 
 $responseSQL = "
-    SELECT q1_rating, q2_rating, q3_rating, q4_rating, q5_rating
+    SELECT 
+        SUM(q1_rating=1) as q1_1, SUM(q1_rating=2) as q1_2, SUM(q1_rating=3) as q1_3, SUM(q1_rating=4) as q1_4, SUM(q1_rating=5) as q1_5,
+        SUM(q2_rating=1) as q2_1, SUM(q2_rating=2) as q2_2, SUM(q2_rating=3) as q2_3, SUM(q2_rating=4) as q2_4, SUM(q2_rating=5) as q2_5,
+        SUM(q3_rating=1) as q3_1, SUM(q3_rating=2) as q3_2, SUM(q3_rating=3) as q3_3, SUM(q3_rating=4) as q3_4, SUM(q3_rating=5) as q3_5,
+        SUM(q4_rating=1) as q4_1, SUM(q4_rating=2) as q4_2, SUM(q4_rating=3) as q4_3, SUM(q4_rating=4) as q4_4, SUM(q4_rating=5) as q4_5,
+        SUM(q5_rating=1) as q5_1, SUM(q5_rating=2) as q5_2, SUM(q5_rating=3) as q5_3, SUM(q5_rating=4) as q5_4, SUM(q5_rating=5) as q5_5
     FROM feedback
     WHERE submitted_at >= {$startExpr}
 ";
 $responseRes = runQuery($conn, $responseSQL);
-while ($r = $responseRes->fetch_assoc()) {
+if ($r = $responseRes->fetch_assoc()) {
     for ($i = 1; $i <= 5; $i++) {
-        $val = (int) $r["q{$i}_rating"];
-        if ($val >= 1 && $val <= 5) {
-            $labelCounts[$val]++;
-            $questionLabelCounts["q{$i}"][$val]++;
+        for ($val = 1; $val <= 5; $val++) {
+            $count = (int) ($r["q{$i}_{$val}"] ?? 0);
+            $labelCounts[$val] += $count;
+            $questionLabelCounts["q{$i}"][$val] = $count;
         }
     }
 }

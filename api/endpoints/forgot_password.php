@@ -1,14 +1,11 @@
 <?php
 // CODE-4 FIX: Use __DIR__-relative paths for consistent resolution regardless
 // of the PHP include_path or the directory from which the script is called.
-require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
