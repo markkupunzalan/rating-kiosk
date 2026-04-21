@@ -35,6 +35,9 @@ let hourlyInst = null;
 let currentFeedbackTotal =
   parseInt(localStorage.getItem("lastSeenFeedbackCount")) || 0;
 
+/* ── Responsive breakpoint ────────────────────────────────── */
+const DESKTOP_BP = 1024;
+
 /* ── Bootstrap ───────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", async () => {
   try {
@@ -52,14 +55,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateSidebarFeedbackCount();
   setInterval(updateSidebarFeedbackCount, 30000);
 
-  // Responsive hamburger
-  const ham = document.getElementById("hamburger");
-  if (ham) ham.style.display = window.innerWidth <= 768 ? "block" : "none";
+  // ESC key closes sidebar on mobile/tablet
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSidebar();
+  });
 });
 
+/* ── Resize: close drawer when crossing into desktop ─────── */
 window.addEventListener("resize", () => {
-  const ham = document.getElementById("hamburger");
-  if (ham) ham.style.display = window.innerWidth <= 768 ? "block" : "none";
+  if (window.innerWidth >= DESKTOP_BP) {
+    closeSidebar(true); // silent — no transition jank
+  }
 });
 
 /* ── Topbar helpers ──────────────────────────────────────── */
@@ -74,8 +80,11 @@ function setTopbarDate() {
       minute: "2-digit",
       hour12: true
     };
-    const el = document.getElementById("topbar-date");
-    if (el) el.textContent = new Date().toLocaleString("en-US", opts).replace(", ", " • ");
+    const formatted = new Date().toLocaleString("en-US", opts).replace(", ", " • ");
+    ["topbar-date", "feedback-topbar-date", "settings-topbar-date"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = formatted;
+    });
   };
 
   updateDate();
@@ -112,9 +121,71 @@ function setAdminUsername(username) {
   if (cuAvatarEl) cuAvatarEl.textContent = initials;
 }
 
-function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("open");
+/* ── Sidebar drawer management ───────────────────────────── */
+function openSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+  if (!sidebar) return;
+
+  sidebar.classList.add("open");
+  sidebar.setAttribute("aria-modal", "true");
+  if (overlay) overlay.classList.add("visible");
+  document.body.classList.add("sidebar-open");
+
+  // Focus the close button for keyboard users
+  const closeBtn = document.getElementById("sidebar-close");
+  if (closeBtn) setTimeout(() => closeBtn.focus(), 80);
+
+  // Install focus trap
+  sidebar.addEventListener("keydown", _sidebarFocusTrap);
 }
+
+function closeSidebar(silent) {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+  if (!sidebar) return;
+
+  // On desktop the sidebar is always visible — never add/remove .open
+  if (window.innerWidth >= DESKTOP_BP && !silent) return;
+
+  sidebar.classList.remove("open");
+  sidebar.setAttribute("aria-modal", "false");
+  if (overlay) overlay.classList.remove("visible");
+  document.body.classList.remove("sidebar-open");
+
+  // Remove focus trap
+  sidebar.removeEventListener("keydown", _sidebarFocusTrap);
+
+  // Return focus to hamburger
+  if (!silent) {
+    const ham = document.getElementById("hamburger");
+    if (ham) ham.focus();
+  }
+}
+
+/** Keep Tab focus inside the sidebar when it's open as a drawer (a11y). */
+function _sidebarFocusTrap(e) {
+  if (e.key !== "Tab") return;
+  const sidebar = document.getElementById("sidebar");
+  const focusable = sidebar.querySelectorAll(
+    'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+}
+
+// Legacy alias for any remaining inline references
+function toggleSidebar() { openSidebar(); }
+
 
 /* ── Sidebar helpers ─────────────────────────────────────── */
 async function updateSidebarFeedbackCount() {
@@ -168,6 +239,11 @@ function navigate(page) {
   if (navEl) {
     navEl.classList.add("active");
     navEl.setAttribute("aria-current", "page");
+  }
+
+  // Auto-close sidebar drawer on mobile/tablet after navigation
+  if (window.innerWidth < DESKTOP_BP) {
+    closeSidebar();
   }
 
   // Logic to clear unread badge instantly on entering the feedback page
@@ -990,7 +1066,7 @@ async function handleLogoFileChange(input) {
         : data.logo_url.split("/").pop();
     }
 
-    showToast("Logo uploaded successfully ✓");
+    showToast("Logo uploaded successfully");
   } catch (err) {
     showToast("Logo upload failed: " + err.message, true);
     // Revert preview on failure
