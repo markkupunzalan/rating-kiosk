@@ -27,12 +27,18 @@
   --font-head: 'Fraunces', Georgia, serif;
   --font-body: 'DM Sans', sans-serif;
   --shadow: 0 24px 80px rgba(255, 107, 53, 0.12), 0 4px 16px rgba(0, 0, 0, 0.06);
-  --page-gutter: clamp(1rem, 3vw, 1.6rem);
-  --floating-ui-clearance: 6.5rem;
+  --page-gutter: clamp(0.75rem, 3vw, 1.6rem);
+  --floating-ui-clearance: 6rem;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
+
+  /* Emoji size — fixed rem, NOT viewport-relative.
+     Emojis only shrink when the card itself shrinks (breakpoints below). */
+  --emoji-size: 2.5rem;
+  /* Label size — fixed, stays readable at any viewport */
+  --label-size: 0.68rem;
 }
 
 html {
@@ -50,10 +56,10 @@ body {
   align-items: flex-start;
   justify-content: center;
   padding:
-    max(var(--page-gutter), calc(var(--safe-top) + 1rem))
-    max(var(--page-gutter), calc(var(--safe-right) + 1rem))
+    max(var(--page-gutter), calc(var(--safe-top) + 0.75rem))
+    max(var(--page-gutter), calc(var(--safe-right) + 0.75rem))
     calc(var(--floating-ui-clearance) + var(--safe-bottom))
-    max(var(--page-gutter), calc(var(--safe-left) + 1rem));
+    max(var(--page-gutter), calc(var(--safe-left) + 0.75rem));
   position: relative;
   overflow-x: hidden;
   overflow-y: auto;
@@ -72,27 +78,27 @@ body {
 }
 
 .blob-1 {
-  width: 500px;
-  height: 500px;
+  width: clamp(200px, 50vw, 500px);
+  height: clamp(200px, 50vw, 500px);
   background: radial-gradient(circle, #ffb347, #ff6b35);
-  top: -150px;
-  left: -100px;
+  top: -100px;
+  left: -80px;
   animation-duration: 14s;
 }
 
 .blob-2 {
-  width: 400px;
-  height: 400px;
+  width: clamp(160px, 40vw, 400px);
+  height: clamp(160px, 40vw, 400px);
   background: radial-gradient(circle, #ffd580, #ff9f43);
-  bottom: -100px;
-  right: -80px;
+  bottom: -80px;
+  right: -60px;
   animation-duration: 10s;
   animation-delay: -4s;
 }
 
 .blob-3 {
-  width: 300px;
-  height: 300px;
+  width: clamp(120px, 30vw, 300px);
+  height: clamp(120px, 30vw, 300px);
   background: radial-gradient(circle, #ffe0cc, #ffa07a);
   top: 40%;
   left: 60%;
@@ -115,7 +121,7 @@ body {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 560px;
+  max-width: 580px;
   margin-inline: auto;
 }
 
@@ -125,7 +131,7 @@ body {
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 2.5rem 2.5rem 2rem;
+  padding: clamp(1.25rem, 5vw, 2.5rem) clamp(1.25rem, 5vw, 2.5rem) clamp(1rem, 4vw, 2rem);
   box-shadow: var(--shadow);
   animation: slideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
   width: 100%;
@@ -149,12 +155,14 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
 }
 
 .brand-dot {
   width: 10px;
   height: 10px;
+  flex-shrink: 0;
   background: var(--accent);
   border-radius: 50%;
   animation: pulse 2s infinite;
@@ -175,7 +183,7 @@ body {
 }
 
 .brand-label {
-  font-size: 0.68rem;
+  font-size: clamp(0.6rem, 1.8vw, 0.72rem);
   letter-spacing: 0.15em;
   font-weight: 600;
   color: var(--accent);
@@ -200,11 +208,11 @@ body {
 /* Titles */
 .card-title {
   font-family: var(--font-head);
-  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-size: clamp(1.5rem, 5.5vw, 2.6rem);
   font-weight: 700;
   line-height: 1.15;
   color: var(--text);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .card-title em {
@@ -214,33 +222,36 @@ body {
 }
 
 .card-sub {
-  font-size: 0.9rem;
+  font-size: clamp(0.8rem, 2.5vw, 0.95rem);
   color: var(--muted);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
 }
 
 /* -------- EMOJI RATING -------- */
 .rating-row {
   display: flex;
-  gap: 10px;
+  gap: clamp(4px, 1.5vw, 12px);
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  align-items: stretch;
+  margin-bottom: 1.25rem;
   min-width: 0;
 }
 
 .emoji-btn {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   background: transparent;
   border: none;
   appearance: none;
   -webkit-appearance: none;
   border-radius: 16px;
-  padding: 1rem 0.2rem;
+  padding: clamp(0.6rem, 2vw, 1rem) 0.15rem;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
   -webkit-tap-highlight-color: transparent;
   position: relative;
@@ -251,16 +262,13 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  /* background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 160, 92, 0.05)); */
   opacity: 0;
   transition: opacity 0.2s;
 }
 
 .emoji-btn:hover {
-  transform: translateY(-6px) scale(1.05);
-  /* border-color: var(--accent);
-  box-shadow: 0 12px 30px rgba(255, 107, 53, 0.2); */
-  padding: 0.9rem;
+  transform: translateY(-5px) scale(1.05);
+  padding-top: clamp(0.5rem, 1.5vw, 0.9rem);
 }
 
 .emoji-btn:hover::before {
@@ -275,7 +283,7 @@ body {
 .emoji-btn.selected {
   background: linear-gradient(135deg, #ff6b35, #ff9f43);
   border-color: transparent;
-  transform: translateY(-8px) scale(1.08);
+  transform: translateY(-7px) scale(1.08);
   box-shadow: 0 16px 40px rgba(255, 107, 53, 0.35);
 }
 
@@ -283,10 +291,13 @@ body {
   color: #fff;
 }
 
+/* KEY FIX: Emoji uses a CSS custom property with a hard minimum of 2rem.
+   This prevents emojis from ever shrinking below 32px on any device. */
 .emoji {
-  font-size: clamp(1.6rem, 5vw, 5rem);
+  font-size: var(--emoji-size);
   line-height: 1;
   display: block;
+  flex-shrink: 0;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -296,12 +307,16 @@ body {
 }
 
 .label {
-  font-size: 0.65rem;
+  font-size: var(--label-size);
   font-weight: 600;
   color: var(--muted);
   letter-spacing: 0.04em;
   text-align: center;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* -------- TEXTAREA -------- */
@@ -315,9 +330,9 @@ textarea {
   background: rgba(255, 255, 255, 0.6);
   border: 1.5px solid rgba(255, 107, 53, 0.2);
   border-radius: 14px;
-  padding: 1rem 1rem 2.2rem;
+  padding: 0.9rem 0.9rem 2.2rem;
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: clamp(0.85rem, 2.5vw, 0.95rem);
   color: var(--text);
   resize: none;
   outline: none;
@@ -361,9 +376,9 @@ textarea:focus {
   color: #fff;
   border: none;
   border-radius: 14px;
-  padding: 1rem 1.5rem;
+  padding: clamp(0.75rem, 2.5vw, 1rem) 1.5rem;
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: clamp(0.9rem, 2.5vw, 1rem);
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -393,6 +408,7 @@ textarea:focus {
 .btn-icon {
   font-size: 1.1rem;
   transition: transform 0.2s;
+  flex-shrink: 0;
 }
 
 .submit-btn:not(:disabled):hover .btn-icon {
@@ -405,7 +421,7 @@ textarea:focus {
   height: 6px;
   background: rgba(255, 107, 53, 0.15);
   border-radius: 4px;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   overflow: hidden;
 }
 
@@ -416,26 +432,27 @@ textarea:focus {
 }
 
 .step-indicator {
-  font-size: 0.75rem;
+  font-size: clamp(0.68rem, 2vw, 0.75rem);
   font-weight: 600;
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .wizard-nav {
   display: flex;
   gap: 12px;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
+  flex-wrap: nowrap;
 }
 
 .nav-btn {
   flex: 1;
   border-radius: 14px;
-  padding: 1rem;
+  padding: clamp(0.75rem, 2.5vw, 1rem);
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: clamp(0.88rem, 2.5vw, 1rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -474,20 +491,20 @@ textarea:focus {
 /* -------- THANK YOU -------- */
 .thank-you-card {
   text-align: center;
-  padding: 3.5rem 2rem;
+  padding: clamp(2rem, 7vw, 3.5rem) clamp(1rem, 4vw, 2rem);
 }
 
 .ty-icon {
-  width: 80px;
-  height: 80px;
+  width: clamp(56px, 15vw, 80px);
+  height: clamp(56px, 15vw, 80px);
   background: linear-gradient(135deg, #00b894, #00cec9);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: clamp(1.4rem, 5vw, 2rem);
   color: #fff;
-  margin: 0 auto 1.5rem;
+  margin: 0 auto 1.25rem;
   animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
@@ -505,17 +522,17 @@ textarea:focus {
 
 .ty-title {
   font-family: var(--font-head);
-  font-size: 2.4rem;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.65rem;
 }
 
 .ty-sub {
-  font-size: 1rem;
+  font-size: clamp(0.85rem, 2.5vw, 1rem);
   color: var(--muted);
   line-height: 1.6;
-  margin-bottom: 2rem;
+  margin-bottom: 1.75rem;
 }
 
 .restart-btn {
@@ -525,7 +542,7 @@ textarea:focus {
   border-radius: 12px;
   padding: 0.75rem 2rem;
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: clamp(0.85rem, 2.5vw, 0.95rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -569,6 +586,7 @@ textarea:focus {
   gap: 6px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .lang-toggle-btn:hover {
@@ -635,8 +653,11 @@ textarea:focus {
   color: var(--accent);
 }
 
+/* Flag emoji in the language picker — fixed size, never shrinks */
 .lang-flag {
   font-size: 1.1rem;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 /* -------- IDLE OVERLAY -------- */
@@ -652,7 +673,7 @@ textarea:focus {
   padding: 0.6rem 1.5rem;
   color: #fff;
   font-family: var(--font-body);
-  font-size: 0.88rem;
+  font-size: clamp(0.78rem, 2.5vw, 0.88rem);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -662,6 +683,7 @@ textarea:focus {
   animation: fadeInDown 0.3s ease both;
   max-width: calc(100vw - (2 * var(--page-gutter)));
   text-align: center;
+  white-space: nowrap;
 }
 
 .idle-overlay.hidden {
@@ -683,56 +705,150 @@ textarea:focus {
 .idle-icon {
   font-size: 1rem;
   animation: spin 2s linear infinite;
+  flex-shrink: 0;
 }
 
+/* ======================================================
+   RESPONSIVE BREAKPOINTS
+   ====================================================== */
+
+/* --- TABLET & DESKTOP (768px+): vertically centre card --- */
 @media (min-width: 768px) {
   body {
     align-items: center;
   }
+
+  .kiosk-wrapper {
+    max-width: 560px;
+  }
 }
 
-@media (max-width: 640px) {
+/* --- WIDE TABLET (600px – 767px): card is still near full width, emojis stay same --- */
+@media (min-width: 600px) and (max-width: 767px) {
+  body {
+    align-items: flex-start;
+  }
+}
+
+/* --- SMALL MOBILE (≤ 480px): card starts shrinking — step emojis down slightly --- */
+@media (max-width: 480px) {
+  :root {
+    /* Step emojis down slightly — card is narrower now */
+    --emoji-size: 2.2rem;
+    --label-size: 0.85rem; /* Bigger label since there's horizontal space in vertical layout */
+  }
+
+  body {
+    padding-bottom: calc(5rem + var(--safe-bottom));
+  }
+
   .card {
-    padding: 1.5rem 1.25rem;
-    border-radius: 20px;
+    border-radius: 18px;
   }
 
+  /* VERTICAL LAYOUT: stack all five emoji buttons in a column */
   .rating-row {
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+    justify-content: flex-start;
   }
 
+  /* Each button becomes a full-width horizontal row: emoji left, label right */
   .emoji-btn {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+    padding: 0.65rem 1rem;
+    border-radius: 14px;
     min-width: 0;
-    padding-inline: 0.1rem;
+    width: 100%;
+    border: 1.5px solid rgba(255, 107, 53, 0.12);
+    background: rgba(255, 255, 255, 0.45);
+  }
+
+  /* In vertical mode, label sits beside the emoji — allow it to read normally */
+  .label {
+    font-size: var(--label-size);
+    text-align: left;
+    white-space: normal;
+    text-overflow: unset;
+    overflow: visible;
+    letter-spacing: 0.03em;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  /* Hover: shift right instead of up */
+  .emoji-btn:hover {
+    transform: translateX(4px) scale(1.02);
+    background: rgba(255, 255, 255, 0.7);
+    border-color: var(--accent);
+  }
+
+  /* Selected: subtle left accent, no vertical lift */
+  .emoji-btn.selected {
+    transform: translateX(6px) scale(1.02);
+    background: linear-gradient(135deg, #ff6b35, #ff9f43);
+    border-color: transparent;
+    box-shadow: 0 8px 24px rgba(255, 107, 53, 0.3);
+  }
+
+  /* Emoji scale on hover/selected stays the same */
+  .emoji-btn:hover .emoji,
+  .emoji-btn.selected .emoji {
+    transform: scale(1.15);
   }
 
   .lang-picker {
-    left: var(--page-gutter);
-    right: var(--page-gutter);
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .lang-dropdown {
-    width: min(100%, 16rem);
+    bottom: max(0.75rem, calc(var(--safe-bottom) + 0.5rem));
+    right: max(0.75rem, calc(var(--safe-right) + 0.5rem));
   }
 
   .idle-overlay {
-    width: min(100%, 24rem);
-    border-radius: 20px;
-    padding-inline: 1rem;
+    width: min(100%, 22rem);
+    border-radius: 16px;
+    padding: 0.5rem 0.9rem;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .wizard-nav {
+    gap: 8px;
   }
 }
 
-@media (max-width: 420px) {
+/* --- VERY SMALL (≤ 360px): iPhone SE / Galaxy A series — vertical layout continues --- */
+@media (max-width: 360px) {
+  :root {
+    --emoji-size: 2rem; /* Step down one more notch at the narrowest card width */
+    --label-size: 0.8rem;
+  }
+
+  .card-title {
+    font-size: 1.35rem;
+  }
+
+  .card-sub {
+    font-size: 0.78rem;
+    margin-bottom: 1rem;
+  }
+
+  .card-header {
+    margin-bottom: 1rem;
+  }
+
+  /* Tighten up the vertical button list a little */
   .rating-row {
-    flex-wrap: wrap;
-    justify-content: center;
+    gap: 6px;
   }
 
   .emoji-btn {
-    flex: 1 1 calc(33.333% - 0.5rem);
-    min-width: 4.5rem;
+    padding: 0.55rem 0.75rem;
+    gap: 0.75rem;
+    border-radius: 12px;
   }
 
   .wizard-nav {
@@ -742,6 +858,46 @@ textarea:focus {
   .nav-btn,
   .submit-btn {
     width: 100%;
+  }
+}
+
+/* --- LANDSCAPE PHONE (≤ 667px height, wide) --- */
+@media (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --floating-ui-clearance: 4.5rem;
+  }
+
+  body {
+    align-items: flex-start;
+    padding-top: 0.5rem;
+  }
+
+  .card {
+    padding: 0.9rem 1.25rem 0.75rem;
+  }
+
+  .card-title {
+    font-size: 1.4rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .card-sub {
+    margin-bottom: 0.75rem;
+  }
+
+  .ty-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .ty-title {
+    font-size: 1.5rem;
+  }
+
+  .thank-you-card {
+    padding: 1.25rem 1rem;
   }
 }
 
