@@ -100,7 +100,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("orientationchange", () => {
     setTimeout(unlockPageScroll, 50);
   });
+
+  // Schedule midnight reset for the feedback page
+  scheduleMidnightReset();
 });
+
+/* ── Midnight Reset ──────────────────────────────────────── */
+let midnightResetTimer = null;
+
+function scheduleMidnightReset() {
+  if (midnightResetTimer) clearTimeout(midnightResetTimer);
+  const now = new Date();
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const msUntilMidnight = tomorrow - now;
+
+  midnightResetTimer = setTimeout(() => {
+    scheduleMidnightReset();
+    const fbPage = document.getElementById("page-feedback");
+    if (fbPage && fbPage.classList.contains("active")) {
+      initFeedbackTable();
+    }
+  }, msUntilMidnight + 1000); // +1s to ensure it's the next day
+}
 
 /* ── Resize: close drawer when crossing into desktop ─────── */
 window.addEventListener("resize", () => {
@@ -622,14 +643,28 @@ function buildQuestionBreakdown(questionCounts) {
 /* ============================================================
    FEEDBACK MANAGEMENT — TABLE (server-side pagination)
    ============================================================ */
+function getLocalYMD() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function initFeedbackTable() {
-  // Reset filters and reload
+  const today = getLocalYMD();
+  
+  // Reset filters and set date to today by default
   Object.keys(filters).forEach((k) => (filters[k] = ""));
+  filters.from = today;
+  filters.to = today;
+
   document.getElementById("searchInput").value = "";
   document.getElementById("ratingFilter").value = "";
   document.getElementById("sentimentFilter").value = "";
-  document.getElementById("dateFrom").value = "";
-  document.getElementById("dateTo").value = "";
+  document.getElementById("dateFrom").value = today;
+  document.getElementById("dateTo").value = today;
+  
   currentPage = 1;
   fetchFeedbackPage();
 }
@@ -646,14 +681,7 @@ function applyFilters() {
 }
 
 function clearFilters() {
-  Object.keys(filters).forEach((k) => (filters[k] = ""));
-  document.getElementById("searchInput").value = "";
-  document.getElementById("ratingFilter").value = "";
-  document.getElementById("sentimentFilter").value = "";
-  document.getElementById("dateFrom").value = "";
-  document.getElementById("dateTo").value = "";
-  currentPage = 1;
-  fetchFeedbackPage();
+  initFeedbackTable();
 }
 
 /* ── Fetch current page from server ─────────────────────── */

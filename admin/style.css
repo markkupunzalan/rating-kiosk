@@ -408,7 +408,7 @@ body.sidebar-open {
   align-items: center;
   justify-content: center;
   background: var(--clr-surface);
-  border: none;
+  border: 1px solid var(--clr-border);
   border-radius: var(--radius-sm);
   cursor: pointer;
   padding: var(--space-2);
@@ -419,8 +419,7 @@ body.sidebar-open {
 }
 
 .hamburger-btn:hover {
-  background: var(--clr-bg);
-  border-color: var(--clr-accent);
+  background: transparent;
   color: var(--clr-accent);
 }
 
