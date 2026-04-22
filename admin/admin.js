@@ -38,8 +38,45 @@ let currentFeedbackTotal =
 /* ── Responsive breakpoint ────────────────────────────────── */
 const DESKTOP_BP = 1024;
 
+function unlockPageScroll() {
+  document.body.classList.remove("sidebar-open");
+
+  document.documentElement.style.height = "auto";
+  document.documentElement.style.minHeight = "100%";
+  document.documentElement.style.overflowY = "auto";
+  document.documentElement.style.overflowX = "hidden";
+
+  document.body.style.height = "auto";
+  document.body.style.minHeight = "100dvh";
+  document.body.style.overflowY = "auto";
+  document.body.style.overflowX = "hidden";
+  document.body.style.position = "static";
+
+  const main = document.getElementById("main");
+  if (main) {
+    main.style.height = "auto";
+    main.style.minHeight = "100dvh";
+    main.style.overflow = "visible";
+  }
+
+  const pageContent = document.querySelector(".page-content");
+  if (pageContent) {
+    pageContent.style.height = "auto";
+    pageContent.style.minHeight = "0";
+    pageContent.style.overflow = "visible";
+  }
+
+  const activeSection = document.querySelector(".page-section.active");
+  if (activeSection) {
+    activeSection.style.height = "auto";
+    activeSection.style.overflow = "visible";
+  }
+}
+
 /* ── Bootstrap ───────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", async () => {
+  unlockPageScroll();
+
   try {
     const authData = await apiFetch("../api/authCheck.php");
     if (authData.username) setAdminUsername(authData.username);
@@ -58,6 +95,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ESC key closes sidebar on mobile/tablet
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeSidebar();
+  });
+
+  window.addEventListener("orientationchange", () => {
+    setTimeout(unlockPageScroll, 50);
   });
 });
 
@@ -161,6 +202,8 @@ function closeSidebar(silent) {
     const ham = document.getElementById("hamburger");
     if (ham) ham.focus();
   }
+
+  unlockPageScroll();
 }
 
 /** Keep Tab focus inside the sidebar when it's open as a drawer (a11y). */
@@ -277,6 +320,10 @@ function navigate(page) {
   }
   if (page === "feedback") initFeedbackTable();
   if (page === "settings") initSettingsPage();
+
+  requestAnimationFrame(() => {
+    unlockPageScroll();
+  });
 }
 
 /* ── Generic fetch wrapper ───────────────────────────────── */

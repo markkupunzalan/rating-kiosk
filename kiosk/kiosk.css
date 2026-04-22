@@ -27,20 +27,38 @@
   --font-head: 'Fraunces', Georgia, serif;
   --font-body: 'DM Sans', sans-serif;
   --shadow: 0 24px 80px rgba(255, 107, 53, 0.12), 0 4px 16px rgba(0, 0, 0, 0.06);
+  --page-gutter: clamp(1rem, 3vw, 1.6rem);
+  --floating-ui-clearance: 6.5rem;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}
+
+html {
+  min-height: 100%;
+  overflow-x: hidden;
 }
 
 body {
   background: linear-gradient(145deg, var(--bg-from) 0%, var(--bg-to) 100%);
   min-height: 100vh;
+  min-height: 100dvh;
   font-family: var(--font-body);
   color: var(--text);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 1.6rem;
+  padding:
+    max(var(--page-gutter), calc(var(--safe-top) + 1rem))
+    max(var(--page-gutter), calc(var(--safe-right) + 1rem))
+    calc(var(--floating-ui-clearance) + var(--safe-bottom))
+    max(var(--page-gutter), calc(var(--safe-left) + 1rem));
   position: relative;
   overflow-x: hidden;
-  overscroll-behavior: none;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Animated background blobs */
@@ -98,6 +116,7 @@ body {
   z-index: 10;
   width: 100%;
   max-width: 560px;
+  margin-inline: auto;
 }
 
 .card {
@@ -109,6 +128,8 @@ body {
   padding: 2.5rem 2.5rem 2rem;
   box-shadow: var(--shadow);
   animation: slideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  width: 100%;
+  overflow: visible;
 }
 
 @keyframes slideUp {
@@ -204,6 +225,7 @@ body {
   gap: 10px;
   justify-content: space-between;
   margin-bottom: 1.5rem;
+  min-width: 0;
 }
 
 .emoji-btn {
@@ -524,9 +546,10 @@ textarea:focus {
 /* -------- LANGUAGE PICKER -------- */
 .lang-picker {
   position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
+  bottom: max(1rem, calc(var(--safe-bottom) + 0.75rem));
+  right: max(1rem, calc(var(--safe-right) + 0.75rem));
   z-index: 999;
+  max-width: calc(100vw - (2 * var(--page-gutter)));
 }
 
 .lang-toggle-btn {
@@ -568,6 +591,7 @@ textarea:focus {
   display: none;
   flex-direction: column;
   min-width: 160px;
+  max-width: min(16rem, calc(100vw - (2 * var(--page-gutter))));
   animation: popUp 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
@@ -618,7 +642,7 @@ textarea:focus {
 /* -------- IDLE OVERLAY -------- */
 .idle-overlay {
   position: fixed;
-  top: 1.5rem;
+  top: max(1rem, calc(var(--safe-top) + 0.75rem));
   left: 50%;
   transform: translateX(-50%);
   background: rgba(26, 18, 9, 0.82);
@@ -636,6 +660,8 @@ textarea:focus {
   z-index: 9999;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   animation: fadeInDown 0.3s ease both;
+  max-width: calc(100vw - (2 * var(--page-gutter)));
+  text-align: center;
 }
 
 .idle-overlay.hidden {
@@ -657,6 +683,66 @@ textarea:focus {
 .idle-icon {
   font-size: 1rem;
   animation: spin 2s linear infinite;
+}
+
+@media (min-width: 768px) {
+  body {
+    align-items: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: 1.5rem 1.25rem;
+    border-radius: 20px;
+  }
+
+  .rating-row {
+    gap: 0.5rem;
+  }
+
+  .emoji-btn {
+    min-width: 0;
+    padding-inline: 0.1rem;
+  }
+
+  .lang-picker {
+    left: var(--page-gutter);
+    right: var(--page-gutter);
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .lang-dropdown {
+    width: min(100%, 16rem);
+  }
+
+  .idle-overlay {
+    width: min(100%, 24rem);
+    border-radius: 20px;
+    padding-inline: 1rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .rating-row {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .emoji-btn {
+    flex: 1 1 calc(33.333% - 0.5rem);
+    min-width: 4.5rem;
+  }
+
+  .wizard-nav {
+    flex-direction: column;
+  }
+
+  .nav-btn,
+  .submit-btn {
+    width: 100%;
+  }
 }
 
 @keyframes spin {
