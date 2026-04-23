@@ -36,7 +36,7 @@
 
   /* Emoji size — fixed rem, NOT viewport-relative.
      Emojis only shrink when the card itself shrinks (breakpoints below). */
-  --emoji-size: 2.5rem;
+  --emoji-size: 3.5rem;
   /* Label size — fixed, stays readable at any viewport */
   --label-size: 0.68rem;
 }
@@ -56,10 +56,7 @@ body {
   align-items: flex-start;
   justify-content: center;
   padding:
-    max(var(--page-gutter), calc(var(--safe-top) + 0.75rem))
-    max(var(--page-gutter), calc(var(--safe-right) + 0.75rem))
-    calc(var(--floating-ui-clearance) + var(--safe-bottom))
-    max(var(--page-gutter), calc(var(--safe-left) + 0.75rem));
+    max(var(--page-gutter), calc(var(--safe-top) + 0.75rem)) max(var(--page-gutter), calc(var(--safe-right) + 0.75rem)) calc(var(--floating-ui-clearance) + var(--safe-bottom)) max(var(--page-gutter), calc(var(--safe-left) + 0.75rem));
   position: relative;
   overflow-x: hidden;
   overflow-y: auto;
@@ -734,8 +731,9 @@ textarea:focus {
 @media (max-width: 480px) {
   :root {
     /* Step emojis down slightly — card is narrower now */
-    --emoji-size: 2.2rem;
-    --label-size: 0.85rem; /* Bigger label since there's horizontal space in vertical layout */
+    --emoji-size: 3rem;
+    --label-size: 0.85rem;
+    /* Bigger label since there's horizontal space in vertical layout */
   }
 
   body {
@@ -823,7 +821,8 @@ textarea:focus {
 /* --- VERY SMALL (≤ 360px): iPhone SE / Galaxy A series — vertical layout continues --- */
 @media (max-width: 360px) {
   :root {
-    --emoji-size: 2rem; /* Step down one more notch at the narrowest card width */
+    --emoji-size: 2.6rem;
+    /* Step down one more notch at the narrowest card width */
     --label-size: 0.8rem;
   }
 
