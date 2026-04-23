@@ -36,7 +36,7 @@
 
   /* Emoji size — fixed rem, NOT viewport-relative.
      Emojis only shrink when the card itself shrinks (breakpoints below). */
-  --emoji-size: 3.5rem;
+  --emoji-size: 4.5rem;
   /* Label size — fixed, stays readable at any viewport */
   --label-size: 0.68rem;
 }
