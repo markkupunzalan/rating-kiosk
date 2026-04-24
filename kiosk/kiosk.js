@@ -537,6 +537,13 @@
     charNum.style.color = len >= 270 ? "#d63031" : len >= 200 ? "#e17055" : "";
   });
 
+  // Smooth scroll submit button into view so the virtual keyboard doesn't hide it
+  commentEl.addEventListener("focus", function () {
+    setTimeout(() => {
+      submitBtn.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 300);
+  });
+
   // ── Form Submission ────────────────────────────────────────────────────────
   submitBtn.addEventListener("click", async function () {
     clearError();
@@ -675,4 +682,13 @@
     attachIdleListeners();
     syncOfflineFeedback();
   });
+
+  // ── Service Worker Registration ────────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(err => {
+        console.warn('ServiceWorker registration failed:', err);
+      });
+    });
+  }
 })();

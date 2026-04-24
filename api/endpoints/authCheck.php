@@ -1,8 +1,5 @@
 <?php
-require_once __DIR__ . '/authMiddleware.php';
-header('Content-Type: application/json');
 
-require_once __DIR__ . '/db.php';
 
 
 // Fetch the latest username from the database

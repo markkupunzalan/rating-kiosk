@@ -1,200 +1,120 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Feedback Kiosk — Admin Dashboard</title>
 
-    <!-- ── Google Fonts ── -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feedback Kiosk — Admin Dashboard</title>
+  <meta name="description" content="Admin dashboard for managing customer feedback, analytics, and kiosk settings." />
 
-    <!-- ── Tailwind CSS (CDN) ── -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ["DM Sans", "sans-serif"],
-              mono: ["DM Mono", "monospace"],
-            },
-            colors: {
-              primary: {
-                50: "#eff6ff",
-                100: "#dbeafe",
-                200: "#bfdbfe",
-                400: "#60a5fa",
-                500: "#3b82f6",
-                600: "#2563eb",
-                700: "#1d4ed8",
-              },
+  <!-- ── Google Fonts ── -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+
+  <!-- ── Tailwind CSS (CDN) ── -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["DM Sans", "sans-serif"],
+            mono: ["DM Mono", "monospace"],
+          },
+          colors: {
+            primary: {
+              50: "#eff6ff",
+              100: "#dbeafe",
+              200: "#bfdbfe",
+              400: "#60a5fa",
+              500: "#3b82f6",
+              600: "#2563eb",
+              700: "#1d4ed8",
             },
           },
         },
-      };
-    </script>
+      },
+    };
+  </script>
 
-    <!-- ── Chart.js ── -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- ── Chart.js ── -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-    <!-- ── Custom Stylesheet ── -->
-    <link rel="stylesheet" href="style.css" />
-  </head>
+  <!-- ── Custom Stylesheet ── -->
+  <link rel="stylesheet" href="style.css?v=3" />
+</head>
 
-  <body>
-    <!-- ════════════════════════════════════════════════════════
+<body>
+  <!-- Skip to Content (a11y) -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- ════════════════════════════════════════════════════════
+     SIDEBAR OVERLAY (drawer backdrop for mobile/tablet)
+  ════════════════════════════════════════════════════════ -->
+  <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()" aria-hidden="true"></div>
+
+  <!-- ════════════════════════════════════════════════════════
      SIDEBAR
-════════════════════════════════════════════════════════ -->
-    <aside id="sidebar">
-      <!-- Logo -->
-      <div class="sidebar-logo">
-        <div style="display: flex; align-items: center; gap: 10px">
-          <div
-            style="
-              width: 32px;
-              height: 32px;
-              background: linear-gradient(135deg, #3b82f6, #6366f1);
-              border-radius: 9px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            "
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-              />
-            </svg>
-          </div>
-          <div>
-            <div
-              style="
-                font-size: 14px;
-                font-weight: 700;
-                color: white;
-                line-height: 1.1;
-              "
-            >
-              Feedback Kiosk
-            </div>
-            <div
-              style="
-                font-size: 10.5px;
-                color: rgba(255, 255, 255, 0.35);
-                font-weight: 500;
-              "
-            >
-              Admin Console
-            </div>
-          </div>
+  ════════════════════════════════════════════════════════ -->
+  <aside id="sidebar" role="dialog" aria-modal="false" aria-label="Navigation sidebar">
+    <!-- Logo + Close btn -->
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-inner">
+        <div class="sidebar-logo-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        </div>
+        <div>
+          <div class="sidebar-logo-text">Feedback Kiosk</div>
+          <div class="sidebar-logo-sub">Admin Console</div>
         </div>
       </div>
+      <!-- Close button (mobile/tablet only — hidden on desktop via CSS) -->
+      <button class="sidebar-close-btn" id="sidebar-close" onclick="closeSidebar()"
+        aria-label="Close navigation sidebar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
 
-      <!-- Navigation -->
-      <nav
-        role="navigation"
-        aria-label="Admin sidebar"
-        style="padding: 12px 0; flex: 1"
-      >
-        <div class="nav-section">Main</div>
+    <!-- Navigation -->
+    <nav role="navigation" aria-label="Admin sidebar" style="padding: 12px 0; flex: 1">
+      <div class="nav-section">Main</div>
 
-        <a
-          class="nav-item active"
-          id="nav-dashboard"
-          role="link"
-          aria-current="page"
-          onclick="navigate('dashboard')"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <rect x="3" y="3" width="7" height="7" />
-            <rect x="14" y="3" width="7" height="7" />
-            <rect x="14" y="14" width="7" height="7" />
-            <rect x="3" y="14" width="7" height="7" />
-          </svg>
-          Overview
-        </a>
+      <a class="nav-item active" id="nav-dashboard" role="link" aria-current="page" onclick="navigate('dashboard')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg>
+        Overview
+      </a>
 
-        <a
-          class="nav-item"
-          id="nav-feedback"
-          role="link"
-          aria-current="false"
-          onclick="navigate('feedback')"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path
-              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-            />
-          </svg>
-          Feedback
-          <span
-            id="sidebar-feedback-count"
-            style="
-              margin-left: auto;
-              background: rgba(59, 130, 246, 0.2);
-              color: #60a5fa;
-              font-size: 10px;
-              font-weight: 700;
-              padding: 2px 7px;
-              border-radius: 20px;
-            "
-            >—</span
-          >
-        </a>
+      <a class="nav-item" id="nav-feedback" role="link" aria-current="false" onclick="navigate('feedback')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        Feedback
+        <span id="sidebar-feedback-count" class="sidebar-feedback-badge" style="display:none">—</span>
+      </a>
 
-        <div class="nav-section">System</div>
+      <div class="nav-section">System</div>
 
-        <a
-          class="nav-item"
-          id="nav-settings"
-          role="link"
-          aria-current="false"
-          onclick="navigate('settings')"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path
-              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06
+      <a class="nav-item" id="nav-settings" role="link" aria-current="false" onclick="navigate('settings')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06
                  a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09
                  A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83
                  l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09
@@ -202,559 +122,270 @@
                  l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09
                  a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83
                  l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09
-                 a1.65 1.65 0 0 0-1.51 1z"
-            />
-          </svg>
-          Settings
-        </a>
+                 a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+        Settings
+      </a>
 
-        <div class="nav-section">Actions</div>
+      <div class="nav-section">Actions</div>
 
-        <a
-          class="nav-item"
-          href="../kiosk/kiosk.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Open Kiosk View in a new tab"
-          style="color: #60a5fa"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <line x1="3" y1="9" x2="21" y2="9" />
-            <line x1="9" y1="21" x2="9" y2="9" />
-          </svg>
-          View Kiosk
-        </a>
-      </nav>
+      <a class="nav-item" href="../kiosk/kiosk.html" target="_blank" rel="noopener noreferrer"
+        aria-label="Open Kiosk View in a new tab" style="color: #60a5fa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <line x1="3" y1="9" x2="21" y2="9" />
+          <line x1="9" y1="21" x2="9" y2="9" />
+        </svg>
+        View Kiosk
+      </a>
+    </nav>
 
-      <!-- User Footer -->
-      <div class="sidebar-footer">
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 6px;
-          "
-        >
-          <div class="avatar" id="sidebar-avatar">JD</div>
-          <div>
-            <div
-              id="sidebar-username"
-              style="
-                font-size: 12.5px;
-                font-weight: 600;
-                color: rgba(255, 255, 255, 0.8);
-              "
-            >
-              John Doe
-            </div>
-            <div style="font-size: 11px; color: rgba(255, 255, 255, 0.35)">
-              Administrator
-            </div>
-          </div>
-          <div
-            style="
-              margin-left: auto;
-              cursor: pointer;
-              color: rgba(255, 255, 255, 0.3);
-            "
-            title="Logout"
-            onclick="window.location.href = '../api/logout.php'"
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-          </div>
+    <!-- User Footer -->
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-inner">
+        <div class="avatar" id="sidebar-avatar">JD</div>
+        <div>
+          <div id="sidebar-username" class="sidebar-username">John Doe</div>
+          <div class="sidebar-role">Administrator</div>
         </div>
+        <button class="sidebar-logout" title="Logout" onclick="window.location.href = '../api/logout.php'"
+          aria-label="Logout">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </button>
       </div>
-    </aside>
-    <!-- /sidebar -->
+    </div>
+  </aside>
+  <!-- /sidebar -->
 
-    <!-- ════════════════════════════════════════════════════════
+  <!-- ════════════════════════════════════════════════════════
      MAIN AREA
-════════════════════════════════════════════════════════ -->
-    <div id="main">
-      <!-- ── Topbar ── -->
-      <header id="topbar">
-        <div style="display: flex; align-items: center; gap: 12px">
-          <!-- Mobile Hamburger -->
-          <button
-            id="hamburger"
-            onclick="toggleSidebar()"
-            style="
-              display: none;
-              background: none;
-              border: none;
-              cursor: pointer;
-              padding: 4px;
-            "
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#374151"
-              stroke-width="2"
-            >
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          </button>
-        </div>
+  ════════════════════════════════════════════════════════ -->
+  <div id="main">
+    <!-- ── Topbar ── -->
+    <header id="topbar">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <!-- Mobile Hamburger -->
+        <button class="hamburger-btn" id="hamburger" onclick="openSidebar()" aria-label="Open navigation menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+      </div>
+    </header>
+    <!-- /topbar -->
 
-        <div style="display: flex; align-items: center; gap: 12px">
-          <!-- Current Date -->
-          <div
-            id="topbar-date"
-            style="font-size: 12px; color: #9ca3af; font-weight: 500"
-          ></div>
-
-          <!-- User Avatar -->
-          <div class="avatar" id="topbar-avatar" style="cursor: pointer">
-            JD
-          </div>
-        </div>
-      </header>
-      <!-- /topbar -->
-
-      <!-- ── Page Content Wrapper ── -->
-      <div style="padding: 20px 20px 24px; flex: 1">
-        <!-- ══════════════════════════════════════════
+    <!-- ── Page Content Wrapper ── -->
+    <main class="page-content" id="main-content">
+      <!-- ══════════════════════════════════════════
          PAGE: DASHBOARD OVERVIEW
     ══════════════════════════════════════════ -->
-        <div id="page-dashboard" class="page-section active">
-          <div
-            style="
-              display: flex;
-              align-items: flex-end;
-              justify-content: space-between;
-              margin-bottom: 16px;
-            "
-          >
-            <div>
-              <h1
-                style="
-                  font-size: 22px;
-                  font-weight: 700;
-                  color: #0f172a;
-                  margin: 0 0 4px;
-                "
-              >
-                Dashboard Overview
-              </h1>
-              <div style="display: flex; align-items: center; gap: 8px">
-                <p style="font-size: 13px; color: #9ca3af; margin: 0">
-                  All feedback activity at a glance
-                </p>
-              </div>
+      <div id="page-dashboard" class="page-section active">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Dashboard Overview</h1>
+            <div style="display: flex; align-items: center; gap: 8px">
+              <p class="page-subtitle">All feedback activity at a glance</p>
             </div>
-            <select
-              class="form-input"
-              id="dashRange"
-              onchange="updateDashboardRange()"
-              style="width: auto; padding: 7px 12px; font-size: 12.5px"
-            >
+          </div>
+          <div class="page-header-actions">
+            <div id="topbar-date" class="topbar-date"></div>
+            <select class="form-input" id="dashRange" onchange="updateDashboardRange()"
+              style="width: auto; padding: 7px 12px; font-size: 12.5px; margin: 0">
               <option value="0">Today</option>
               <option value="7">Last 7 days</option>
               <option value="30" selected>Last 30 days</option>
               <option value="90">Last 90 days</option>
             </select>
           </div>
-
-          <!-- KPI Cards -->
-          <div
-            style="
-              display: grid;
-              grid-template-columns: repeat(5, 1fr);
-              gap: 12px;
-              margin-bottom: 16px;
-            "
-          >
-            <!-- Total Feedback -->
-            <div class="metric-card fade-in fade-in-1">
-              <div class="icon-wrap" style="background: #eff6ff">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#3b82f6"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                >
-                  <path
-                    d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-                  />
-                </svg>
-              </div>
-              <div class="metric-value" id="m-total">—</div>
-              <div class="metric-label">Total Feedback</div>
-            </div>
-
-            <!-- Average Rating -->
-            <div class="metric-card fade-in fade-in-2">
-              <div class="icon-wrap" style="background: #fef3c7">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#d97706"
-                  stroke-width="2"
-                >
-                  <polygon
-                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                  />
-                </svg>
-              </div>
-              <div class="metric-value" id="m-avg">—</div>
-              <div class="metric-label">Average Rating</div>
-            </div>
-
-            <!-- Positive Sentiment -->
-            <div class="metric-card fade-in fade-in-3">
-              <div class="icon-wrap" style="background: #d1fae5">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#059669"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-                  <line x1="9" y1="9" x2="9.01" y2="9" />
-                  <line x1="15" y1="9" x2="15.01" y2="9" />
-                </svg>
-              </div>
-              <div class="metric-value" id="m-positive" style="color: #059669">
-                —
-              </div>
-              <div class="metric-label">Positive Sentiment</div>
-            </div>
-
-            <!-- Negative Sentiment -->
-            <div class="metric-card fade-in fade-in-4">
-              <div class="icon-wrap" style="background: #fee2e2">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#dc2626"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M16 16s-1.5-2-4-2-4 2-4 2" />
-                  <line x1="9" y1="9" x2="9.01" y2="9" />
-                  <line x1="15" y1="9" x2="15.01" y2="9" />
-                </svg>
-              </div>
-              <div class="metric-value" id="m-negative" style="color: #dc2626">
-                —
-              </div>
-              <div class="metric-label">Negative Sentiment</div>
-            </div>
-
-            <!-- Peak Day -->
-            <div class="metric-card fade-in fade-in-5">
-              <div class="icon-wrap" style="background: #f3e8ff">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#9333ea"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                >
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                  <line x1="16" y1="2" x2="16" y2="6" />
-                  <line x1="8" y1="2" x2="8" y2="6" />
-                  <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
-              </div>
-              <div class="metric-value" id="a-peak-day">—</div>
-              <div class="metric-label">Peak Day</div>
-            </div>
-          </div>
-          <!-- /KPI Cards -->
-
-          <!-- Charts Row -->
-          <div
-            style="
-              display: grid;
-              grid-template-columns: 2fr 1fr;
-              gap: 12px;
-              margin-bottom: 16px;
-            "
-          >
-            <!-- Line Chart -->
-            <div class="chart-card fade-in fade-in-1">
-              <div class="chart-title">Feedback Trend</div>
-              <div class="chart-subtitle">
-                Daily submissions over the selected period
-              </div>
-              <div style="height: 220px; position: relative">
-                <canvas id="lineChart"></canvas>
-              </div>
-            </div>
-
-            <!-- Donut Chart -->
-            <div class="chart-card fade-in fade-in-2">
-              <div class="chart-title">Sentiment Distribution</div>
-              <div class="chart-subtitle">Breakdown for current period</div>
-              <div
-                style="
-                  height: 220px;
-                  position: relative;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                "
-              >
-                <canvas id="pieChart" style="max-width: 200px"></canvas>
-              </div>
-              <!-- Chart Legend -->
-              <div
-                style="
-                  display: flex;
-                  justify-content: center;
-                  gap: 16px;
-                  margin-top: 12px;
-                "
-              >
-                <div
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 5px;
-                    font-size: 12px;
-                    color: #6b7280;
-                  "
-                >
-                  <span
-                    style="
-                      width: 10px;
-                      height: 10px;
-                      border-radius: 3px;
-                      background: #10b981;
-                      display: inline-block;
-                    "
-                  ></span>
-                  Positive
-                </div>
-                <div
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 5px;
-                    font-size: 12px;
-                    color: #6b7280;
-                  "
-                >
-                  <span
-                    style="
-                      width: 10px;
-                      height: 10px;
-                      border-radius: 3px;
-                      background: #f59e0b;
-                      display: inline-block;
-                    "
-                  ></span>
-                  Neutral
-                </div>
-                <div
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 5px;
-                    font-size: 12px;
-                    color: #6b7280;
-                  "
-                >
-                  <span
-                    style="
-                      width: 10px;
-                      height: 10px;
-                      border-radius: 3px;
-                      background: #ef4444;
-                      display: inline-block;
-                    "
-                  ></span>
-                  Negative
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- /Charts Row -->
-
-          <!-- Secondary Charts Row -->
-          <div
-            style="
-              display: grid;
-              grid-template-columns: 1fr;
-              gap: 12px;
-              margin-bottom: 16px;
-            "
-          >
-            <div class="chart-card">
-              <div class="chart-title">Hourly Activity</div>
-              <div class="chart-subtitle">When do customers give feedback?</div>
-              <div style="height: 200px">
-                <canvas id="hourlyChart"></canvas>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bottom Row -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px">
-            <!-- Overall Response Labels -->
-            <div class="chart-card">
-              <div class="chart-title" style="margin-bottom: 4px">
-                Overall Response Labels
-              </div>
-              <div class="chart-subtitle">
-                Count of all question ratings across the dataset
-              </div>
-              <div
-                id="ratingBreakdown"
-                style="
-                  display: flex;
-                  flex-direction: column;
-                  gap: 10px;
-                  margin-top: 8px;
-                "
-              ></div>
-            </div>
-
-            <!-- Question Label Breakdown -->
-            <div class="chart-card">
-              <div class="chart-title" style="margin-bottom: 4px">
-                Question Label Breakdown
-              </div>
-              <div class="chart-subtitle">
-                Counts by label for each question
-              </div>
-              <div id="questionBreakdown" style="margin-top: 12px"></div>
-            </div>
-          </div>
-          <!-- /Bottom Row -->
         </div>
-        <!-- /page-dashboard -->
 
-        <!-- ══════════════════════════════════════════
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+          <!-- Total Feedback -->
+          <div class="metric-card fade-in fade-in-1">
+            <div class="icon-wrap" style="background: #eff6ff">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"
+                stroke-linecap="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </div>
+            <div class="metric-value" id="m-total">—</div>
+            <div class="metric-label">Total Feedback</div>
+          </div>
+
+          <!-- Average Rating -->
+          <div class="metric-card fade-in fade-in-2">
+            <div class="icon-wrap" style="background: #fef3c7">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2">
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </div>
+            <div class="metric-value" id="m-avg">—</div>
+            <div class="metric-label">Average Rating</div>
+          </div>
+
+          <!-- Positive Sentiment -->
+          <div class="metric-card fade-in fade-in-3">
+            <div class="icon-wrap" style="background: #d1fae5">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"
+                stroke-linecap="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                <line x1="9" y1="9" x2="9.01" y2="9" />
+                <line x1="15" y1="9" x2="15.01" y2="9" />
+              </svg>
+            </div>
+            <div class="metric-value" id="m-positive" style="color: #059669">—</div>
+            <div class="metric-label">Positive Sentiment</div>
+          </div>
+
+          <!-- Negative Sentiment -->
+          <div class="metric-card fade-in fade-in-4">
+            <div class="icon-wrap" style="background: #fee2e2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"
+                stroke-linecap="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M16 16s-1.5-2-4-2-4 2-4 2" />
+                <line x1="9" y1="9" x2="9.01" y2="9" />
+                <line x1="15" y1="9" x2="15.01" y2="9" />
+              </svg>
+            </div>
+            <div class="metric-value" id="m-negative" style="color: #dc2626">—</div>
+            <div class="metric-label">Negative Sentiment</div>
+          </div>
+
+          <!-- Peak Day -->
+          <div class="metric-card fade-in fade-in-5">
+            <div class="icon-wrap" style="background: #f3e8ff">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2"
+                stroke-linecap="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
+            <div class="metric-value" id="a-peak-day">—</div>
+            <div class="metric-label">Peak Day</div>
+          </div>
+        </div>
+        <!-- /KPI Cards -->
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+          <!-- Line Chart -->
+          <div class="chart-card fade-in fade-in-1">
+            <div class="chart-title">Feedback Trend</div>
+            <div class="chart-subtitle">Daily submissions over the selected period</div>
+            <div class="chart-wrap">
+              <canvas id="lineChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Donut Chart -->
+          <div class="chart-card fade-in fade-in-2">
+            <div class="chart-title">Sentiment Distribution</div>
+            <div class="chart-subtitle">Breakdown for current period</div>
+            <div class="donut-wrap">
+              <canvas id="pieChart"></canvas>
+            </div>
+            <!-- Chart Legend -->
+            <div class="chart-legend">
+              <div class="chart-legend-item">
+                <span class="chart-legend-dot" style="background: #10b981"></span>
+                Positive
+              </div>
+              <div class="chart-legend-item">
+                <span class="chart-legend-dot" style="background: #f59e0b"></span>
+                Neutral
+              </div>
+              <div class="chart-legend-item">
+                <span class="chart-legend-dot" style="background: #ef4444"></span>
+                Negative
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /Charts Row -->
+
+        <!-- Secondary Charts Row -->
+        <div class="charts-row-secondary">
+          <div class="chart-card">
+            <div class="chart-title">Hourly Activity</div>
+            <div class="chart-subtitle">When do customers give feedback?</div>
+            <div class="chart-wrap-sm">
+              <canvas id="hourlyChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Row -->
+        <div class="bottom-row">
+          <!-- Overall Response Labels -->
+          <div class="chart-card">
+            <div class="chart-title" style="margin-bottom: 4px">Overall Response Labels</div>
+            <div class="chart-subtitle">Count of all question ratings across the dataset</div>
+            <div id="ratingBreakdown" style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px"></div>
+          </div>
+
+          <!-- Question Label Breakdown -->
+          <div class="chart-card">
+            <div class="chart-title" style="margin-bottom: 4px">Question Label Breakdown</div>
+            <div class="chart-subtitle">Counts by label for each question</div>
+            <div id="questionBreakdown" style="margin-top: 12px"></div>
+          </div>
+        </div>
+        <!-- /Bottom Row -->
+      </div>
+      <!-- /page-dashboard -->
+
+      <!-- ══════════════════════════════════════════
          PAGE: FEEDBACK MANAGEMENT
     ══════════════════════════════════════════ -->
-        <div id="page-feedback" class="page-section">
-          <!-- Page Header -->
-          <div
-            style="
-              display: flex;
-              align-items: flex-end;
-              justify-content: space-between;
-              margin-bottom: 24px;
-            "
-          >
-            <div>
-              <h1
-                style="
-                  font-size: 22px;
-                  font-weight: 700;
-                  color: #0f172a;
-                  margin: 0 0 4px;
-                "
-              >
-                Feedback Management
-              </h1>
-              <p style="font-size: 13px; color: #9ca3af; margin: 0">
-                Browse, search, and filter all customer feedback
-              </p>
-            </div>
-            <div style="display: flex; gap: 8px">
-              <button
-                class="btn-export"
-                id="btnClearAll"
-                onclick="clearAllFeedback()"
-                style="
+      <div id="page-feedback" class="page-section">
+        <!-- Page Header -->
+        <div class="page-header" style="margin-bottom: 24px">
+          <div>
+            <h1 class="page-title">Feedback Management</h1>
+            <p class="page-subtitle">Browse, search, and filter all customer feedback</p>
+          </div>
+          <div class="page-header-actions">
+            <div id="feedback-topbar-date" class="topbar-date"></div>
+            <div class="btn-actions-group">
+              <button class="btn-export" id="btnClearAll" onclick="clearAllFeedback()" style="
                   color: #ef4444;
                   border-color: #fca5a5;
                   background: #fef2f2;
-                "
-              >
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
+                ">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="3 6 5 6 21 6" />
                   <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                 </svg>
                 Clear All Feedback
               </button>
               <button class="btn-export" onclick="exportCSV()">
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
                 Export CSV
               </button>
-              <button
-                class="btn-export"
-                id="btnExportPDF"
-                onclick="exportPDF()"
-                style="
+              <button class="btn-export" id="btnExportPDF" onclick="exportPDF()" style="
                   color: #6366f1;
                   border-color: #c7d2fe;
                   background: #eef2ff;
-                "
-              >
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                  />
+                ">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                   <line x1="16" y1="13" x2="8" y2="13" />
                   <line x1="16" y1="17" x2="8" y2="17" />
@@ -764,277 +395,165 @@
               </button>
             </div>
           </div>
+        </div>
 
-          <!-- Filter Bar -->
-          <div class="chart-card" style="margin-bottom: 20px">
-            <div
-              style="
-                display: flex;
-                gap: 12px;
-                align-items: flex-end;
-                flex-wrap: wrap;
-              "
-            >
-              <!-- Search -->
-              <div style="flex: 1; min-width: 200px">
-                <label class="form-label">Search</label>
-                <div style="position: relative">
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="#9ca3af"
-                    stroke-width="2"
-                    style="
+        <!-- Filter Bar -->
+        <div class="chart-card" style="margin-bottom: 20px">
+          <div class="filter-bar">
+            <!-- Search -->
+            <div class="filter-field filter-field-search">
+              <label class="form-label">Search</label>
+              <div style="position: relative">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" style="
                       position: absolute;
                       left: 12px;
                       top: 50%;
                       transform: translateY(-50%);
-                    "
-                  >
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </svg>
-                  <input
-                    class="form-input"
-                    id="searchInput"
-                    type="text"
-                    placeholder="Search by keyword…"
-                    style="padding-left: 34px"
-                    oninput="applyFilters()"
-                  />
-                </div>
+                    ">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input class="form-input" id="searchInput" type="text" placeholder="Search by keyword…"
+                  style="padding-left: 34px" oninput="applyFilters()" />
               </div>
-
-              <!-- Rating Filter -->
-              <div style="min-width: 140px">
-                <label class="form-label">Rating</label>
-                <select
-                  class="form-input"
-                  id="ratingFilter"
-                  onchange="applyFilters()"
-                >
-                  <option value="">All Ratings</option>
-                  <option value="5">⭐⭐⭐⭐⭐ (5)</option>
-                  <option value="4">⭐⭐⭐⭐ (4)</option>
-                  <option value="3">⭐⭐⭐ (3)</option>
-                  <option value="2">⭐⭐ (2)</option>
-                  <option value="1">⭐ (1)</option>
-                </select>
-              </div>
-
-              <!-- Sentiment Filter -->
-              <div style="min-width: 140px">
-                <label class="form-label">Sentiment</label>
-                <select
-                  class="form-input"
-                  id="sentimentFilter"
-                  onchange="applyFilters()"
-                >
-                  <option value="">All</option>
-                  <option value="positive">Positive</option>
-                  <option value="neutral">Neutral</option>
-                  <option value="negative">Negative</option>
-                </select>
-              </div>
-
-              <!-- Date From -->
-              <div style="min-width: 140px">
-                <label class="form-label">Date From</label>
-                <input
-                  class="form-input"
-                  type="date"
-                  id="dateFrom"
-                  onchange="applyFilters()"
-                />
-              </div>
-
-              <!-- Date To -->
-              <div style="min-width: 140px">
-                <label class="form-label">Date To</label>
-                <input
-                  class="form-input"
-                  type="date"
-                  id="dateTo"
-                  onchange="applyFilters()"
-                />
-              </div>
-
-              <button class="btn-secondary" onclick="clearFilters()">
-                Clear
-              </button>
             </div>
+
+            <!-- Rating Filter -->
+            <div class="filter-field filter-field-select">
+              <label class="form-label">Rating</label>
+              <select class="form-input" id="ratingFilter" onchange="applyFilters()">
+                <option value="">All Ratings</option>
+                <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                <option value="4">⭐⭐⭐⭐ (4)</option>
+                <option value="3">⭐⭐⭐ (3)</option>
+                <option value="2">⭐⭐ (2)</option>
+                <option value="1">⭐ (1)</option>
+              </select>
+            </div>
+
+            <!-- Sentiment Filter -->
+            <div class="filter-field filter-field-select">
+              <label class="form-label">Sentiment</label>
+              <select class="form-input" id="sentimentFilter" onchange="applyFilters()">
+                <option value="">All</option>
+                <option value="positive">Positive</option>
+                <option value="neutral">Neutral</option>
+                <option value="negative">Negative</option>
+              </select>
+            </div>
+
+            <!-- Date From -->
+            <div class="filter-field filter-field-date">
+              <label class="form-label">Date From</label>
+              <input class="form-input" type="date" id="dateFrom" onchange="applyFilters()" />
+            </div>
+
+            <!-- Date To -->
+            <div class="filter-field filter-field-date">
+              <label class="form-label">Date To</label>
+              <input class="form-input" type="date" id="dateTo" onchange="applyFilters()" />
+            </div>
+
+            <button class="btn-secondary" onclick="clearFilters()">Clear</button>
           </div>
-          <!-- /Filter Bar -->
-
-          <!-- Results Summary -->
-          <div
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              margin-bottom: 12px;
-            "
-          >
-            <div style="font-size: 13px; color: #6b7280">
-              Showing
-              <strong id="resultsCount" style="color: #0f172a">0</strong>
-              results
-            </div>
-            <div style="font-size: 12.5px; color: #9ca3af">
-              Page <span id="currentPageLabel">1</span> of
-              <span id="totalPagesLabel">1</span>
-            </div>
-          </div>
-
-          <!-- Data Table -->
-          <div
-            class="chart-card"
-            style="padding: 0; overflow: hidden; margin-bottom: 16px"
-          >
-            <div style="overflow-x: auto">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th style="text-align: center; width: 130px">Customer #</th>
-                    <th>Rating</th>
-                    <th style="min-width: 260px">Feedback Message</th>
-                    <th>Sentiment</th>
-                    <th>Date &amp; Time</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="feedbackTableBody">
-                  <tr>
-                    <td
-                      colspan="6"
-                      style="text-align: center; color: #9ca3af; padding: 40px"
-                    >
-                      Loading…
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Pagination -->
-          <div
-            id="paginationContainer"
-            style="
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 6px;
-            "
-          ></div>
         </div>
-        <!-- /page-feedback -->
+        <!-- /Filter Bar -->
 
-        <!-- ══════════════════════════════════════════
+        <!-- Results Summary -->
+        <div class="results-bar">
+          <div class="results-count">
+            Showing
+            <strong id="resultsCount" style="color: #0f172a">0</strong>
+            results
+          </div>
+          <div class="results-page-info">
+            Page <span id="currentPageLabel">1</span> of
+            <span id="totalPagesLabel">1</span>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="chart-card" style="padding: 0; overflow: hidden; margin-bottom: 16px">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="text-align:center; width:130px">Customer #</th>
+                  <th>Rating</th>
+                  <th style="min-width: 260px">Feedback Message</th>
+                  <th>Sentiment</th>
+                  <th>Date &amp; Time</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="feedbackTableBody">
+                <tr>
+                  <td colspan="6" style="text-align: center; color: #9ca3af; padding: 40px">
+                    Loading…
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="paginationContainer" class="pagination-wrap"></div>
+      </div>
+      <!-- /page-feedback -->
+
+      <!-- ══════════════════════════════════════════
          PAGE: GENERAL SETTINGS
     ══════════════════════════════════════════ -->
-        <div id="page-settings" class="page-section">
-          <div style="margin-bottom: 24px">
-            <h1
-              style="
-                font-size: 22px;
-                font-weight: 700;
-                color: #0f172a;
-                margin: 0 0 4px;
-              "
-            >
-              General Settings
-            </h1>
-            <p style="font-size: 13px; color: #9ca3af; margin: 0">
-              Configure your kiosk system preferences
-            </p>
+      <div id="page-settings" class="page-section">
+        <div class="page-header" style="margin-bottom: 24px">
+          <div>
+            <h1 class="page-title">General Settings</h1>
+            <p class="page-subtitle">Configure your kiosk system preferences</p>
           </div>
+          <div id="settings-topbar-date" class="topbar-date"></div>
+        </div>
 
-          <div class="settings-section">
-            <div class="settings-header">
-              <div style="font-size: 14px; font-weight: 700; color: #0f172a">
-                System Configuration
+        <div class="settings-section">
+          <div class="settings-header">
+            <div style="font-size: 14px; font-weight: 700; color: #0f172a">
+              System Configuration
+            </div>
+          </div>
+          <div class="settings-body">
+            <div class="settings-grid">
+              <div>
+                <label class="form-label">Organization Name</label>
+                <input class="form-input" id="setting-business-name" type="text" value="" />
+              </div>
+              <div>
+                <label class="form-label">Default Language</label>
+                <select class="form-input" id="setting-default-language">
+                  <option value="en">English</option>
+                  <option value="fil">Filipino</option>
+                  <option value="es">Spanish</option>
+                  <option value="zh">Chinese</option>
+                  <option value="ja">Japanese</option>
+                  <option value="ar">Arabic</option>
+                </select>
               </div>
             </div>
-            <div class="settings-body">
-              <div
-                style="
-                  display: grid;
-                  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                  gap: 16px;
-                "
-              >
+
+            <!-- Kiosk Branding -->
+            <div class="branding-separator">
+              <div class="branding-label">Kiosk Branding</div>
+              <div class="settings-grid">
                 <div>
-                  <label class="form-label">Organization Name</label>
-                  <input
-                    class="form-input"
-                    id="setting-business-name"
-                    type="text"
-                    value=""
-                  />
-                </div>
-                <div>
-                  <label class="form-label">Default Language</label>
-                  <select class="form-input" id="setting-default-language">
-                    <option value="en">English</option>
-                    <option value="fil">Filipino</option>
-                    <option value="es">Spanish</option>
-                    <option value="zh">Chinese</option>
-                    <option value="ja">Japanese</option>
-                    <option value="ar">Arabic</option>
-                  </select>
-                </div>
-              </div>
+                  <label class="form-label">Logo</label>
 
-              <!-- Kiosk Branding (also controls kiosk.js appearance) -->
-              <div
-                style="
-                  margin-top: 20px;
-                  padding-top: 20px;
-                  border-top: 1px solid #f1f4f8;
-                "
-              >
-                <div
-                  style="
-                    font-size: 11px;
-                    font-weight: 600;
-                    color: #9ca3af;
-                    text-transform: uppercase;
-                    letter-spacing: 0.07em;
-                    margin-bottom: 12px;
-                  "
-                >
-                  Kiosk Branding
-                </div>
-                <div
-                  style="
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                    gap: 16px;
-                  "
-                >
-                  <div>
-                    <label class="form-label">Logo</label>
+                  <!-- Hidden file picker -->
+                  <input type="file" id="setting-logo-file"
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" style="display:none"
+                    onchange="handleLogoFileChange(this)" />
 
-                    <!-- Hidden file picker – accepts PNG, JPG, SVG, WEBP, GIF -->
-                    <input
-                      type="file"
-                      id="setting-logo-file"
-                      accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif"
-                      style="display: none"
-                      onchange="handleLogoFileChange(this)"
-                    />
-
-                    <!-- Upload trigger button -->
-                    <button
-                      type="button"
-                      id="btn-upload-logo"
-                      onclick="
-                        document.getElementById('setting-logo-file').click()
-                      "
-                      style="
+                  <!-- Upload trigger button -->
+                  <button type="button" id="btn-upload-logo"
+                    onclick="document.getElementById('setting-logo-file').click()" style="
                         display: inline-flex;
                         align-items: center;
                         gap: 8px;
@@ -1048,49 +567,25 @@
                         cursor: pointer;
                         transition: all 0.2s;
                       "
-                      onmouseover="
-                        this.style.background = '#eff6ff';
-                        this.style.borderColor = '#3b82f6';
-                        this.style.color = '#2563eb';
-                      "
-                      onmouseout="
-                        this.style.background = '#f8fafc';
-                        this.style.borderColor = '#cbd5e1';
-                        this.style.color = '#475569';
-                      "
-                    >
-                      <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" y1="3" x2="12" y2="15" />
-                      </svg>
-                      Upload Logo
-                    </button>
+                    onmouseover="this.style.background='#eff6ff';this.style.borderColor='#3b82f6';this.style.color='#2563eb'"
+                    onmouseout="this.style.background='#f8fafc';this.style.borderColor='#cbd5e1';this.style.color='#475569'">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    Upload Logo
+                  </button>
 
-                    <!-- Logo preview (hidden until an image is chosen / loaded) -->
-                    <div
-                      id="logo-preview-wrap"
-                      style="
+                  <!-- Logo preview -->
+                  <div id="logo-preview-wrap" style="
                         display: none;
                         margin-top: 10px;
                         align-items: center;
                         gap: 12px;
-                      "
-                    >
-                      <img
-                        id="logo-preview-img"
-                        src=""
-                        alt="Logo preview"
-                        style="
+                      ">
+                    <img id="logo-preview-img" src="" alt="Logo preview" style="
                           max-height: 56px;
                           max-width: 160px;
                           object-fit: contain;
@@ -1098,27 +593,11 @@
                           border-radius: 8px;
                           padding: 6px;
                           background: #ffffff;
-                        "
-                      />
-                      <div
-                        style="display: flex; flex-direction: column; gap: 4px"
-                      >
-                        <span
-                          id="logo-preview-name"
-                          style="
-                            font-size: 11.5px;
-                            font-weight: 600;
-                            color: #374151;
-                            max-width: 160px;
-                            white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                          "
-                        ></span>
-                        <button
-                          type="button"
-                          onclick="removeLogo()"
-                          style="
+                        " />
+                    <div style="display:flex;flex-direction:column;gap:4px">
+                      <span id="logo-preview-name" style="font-size:11.5px;font-weight:600;color:#374151;max-width:160px;
+                                 white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span>
+                      <button type="button" onclick="removeLogo()" style="
                             font-size: 11px;
                             color: #ef4444;
                             background: none;
@@ -1127,98 +606,67 @@
                             padding: 0;
                             text-align: left;
                             font-weight: 500;
-                          "
-                          onmouseover="this.style.textDecoration = 'underline'"
-                          onmouseout="this.style.textDecoration = 'none'"
-                        >
-                          Remove
-                        </button>
-                      </div>
+                          " onmouseover="this.style.textDecoration='underline'"
+                        onmouseout="this.style.textDecoration='none'">Remove</button>
                     </div>
+                  </div>
 
-                    <!-- Uploading spinner (shown during async upload) -->
-                    <div
-                      id="logo-uploading"
-                      style="
+                  <!-- Uploading spinner -->
+                  <div id="logo-uploading" style="
                         display: none;
                         margin-top: 8px;
                         font-size: 12px;
                         color: #6b7280;
                         align-items: center;
                         gap: 6px;
-                      "
-                    >
-                      <svg
-                        width="13"
-                        height="13"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#6b7280"
-                        stroke-width="2"
-                        style="animation: spin 1s linear infinite"
-                      >
-                        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                      </svg>
-                      Uploading…
-                    </div>
-
-                    <!-- Accepted formats hint -->
-                    <div
-                      style="font-size: 11px; color: #9ca3af; margin-top: 6px"
-                    >
-                      PNG, JPG, SVG, WEBP · max 5 MB
-                    </div>
+                      ">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"
+                      style="animation:spin 1s linear infinite">
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    </svg>
+                    Uploading…
                   </div>
-                  <div>
-                    <label class="form-label">Primary Accent Color</label>
-                    <div style="display: flex; gap: 8px; align-items: center">
-                      <input
-                        class="form-input"
-                        id="setting-primary-color"
-                        type="text"
-                        placeholder="#ff6b35"
-                        style="flex: 1"
-                      />
-                      <input
-                        type="color"
-                        id="setting-color-picker"
-                        value="#ff6b35"
-                        oninput="
+
+                  <!-- Accepted formats hint -->
+                  <div style="font-size:11px;color:#9ca3af;margin-top:6px">
+                    PNG, JPG, SVG, WEBP · max 5 MB
+                  </div>
+                </div>
+                <div>
+                  <label class="form-label">Primary Accent Color</label>
+                  <div style="display: flex; gap: 8px; align-items: center">
+                    <input class="form-input" id="setting-primary-color" type="text" placeholder="#ff6b35"
+                      style="flex: 1" />
+                    <input type="color" id="setting-color-picker" value="#ff6b35" oninput="
                           document.getElementById(
                             'setting-primary-color',
                           ).value = this.value
-                        "
-                        style="
+                        " style="
                           width: 38px;
                           height: 38px;
                           border: 1px solid #e5eaf0;
                           border-radius: 8px;
                           cursor: pointer;
                           padding: 2px;
-                        "
-                      />
-                    </div>
+                        " />
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <!-- /System Configuration -->
+        </div>
+        <!-- /System Configuration -->
 
-          <!-- ── Change Username ── -->
-          <div class="settings-section" style="margin-top: 20px">
-            <div class="settings-header">
-              <div>
-                <div style="font-size: 14px; font-weight: 700; color: #0f172a">
-                  Change Username
-                </div>
-                <div style="font-size: 12px; color: #9ca3af; margin-top: 2px">
-                  Update how you appear in the dashboard
-                </div>
+        <!-- ── Change Username ── -->
+        <div class="settings-section">
+          <div class="settings-header">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #0f172a">Change Username</div>
+              <div style="font-size: 12px; color: #9ca3af; margin-top: 2px">Update how you appear in the dashboard
               </div>
-              <!-- Profile icon -->
-              <div
-                style="
+            </div>
+            <!-- Profile icon -->
+            <div style="
                   width: 34px;
                   height: 34px;
                   background: #fef3c7;
@@ -1227,187 +675,114 @@
                   align-items: center;
                   justify-content: center;
                   flex-shrink: 0;
-                "
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#d97706"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-              </div>
+                ">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
             </div>
-            <div
-              class="settings-body"
-              style="
+          </div>
+          <div class="settings-body" style="
                 padding: 0;
-                overflow: hidden;
                 border-radius: 0 0 10px 10px;
                 background: #ffffff;
-              "
-            >
-              <!-- Status Header -->
-              <div
-                style="
-                  background: linear-gradient(to right, #f8fafc, #ffffff);
-                  border-bottom: 1px solid #e5eaf0;
-                  padding: 24px;
-                  display: flex;
-                  align-items: center;
-                  gap: 16px;
-                "
-              >
-                <div
-                  class="avatar"
-                  id="cu-avatar-preview"
-                  style="
+              ">
+            <!-- Status Header -->
+            <div class="settings-status-header">
+              <div class="avatar" id="cu-avatar-preview" style="
                     width: 56px;
                     height: 56px;
                     font-size: 20px;
                     background: linear-gradient(135deg, #3b82f6, #6366f1);
                     color: white;
                     box-shadow: 0 6px 12px -2px rgba(59, 130, 246, 0.3);
-                  "
-                >
-                  JD
-                </div>
-                <div>
-                  <div
-                    style="
+                  ">
+                JD
+              </div>
+              <div>
+                <div style="
                       font-size: 11px;
                       font-weight: 700;
                       color: #64748b;
                       letter-spacing: 0.06em;
                       text-transform: uppercase;
                       margin-bottom: 4px;
-                    "
-                  >
-                    Current Username
-                  </div>
-                  <div
-                    id="cu-current-display"
-                    style="
+                    ">
+                  Current Username
+                </div>
+                <div id="cu-current-display" style="
                       font-size: 20px;
                       font-weight: 700;
                       color: #0f172a;
                       letter-spacing: -0.02em;
-                    "
-                  >
-                    John Doe
-                  </div>
+                    ">
+                  John Doe
                 </div>
               </div>
+            </div>
 
-              <!-- Form Body -->
-              <div
-                style="
-                  padding: 28px 24px;
-                  display: grid;
-                  grid-template-columns: 1fr 1fr;
-                  gap: 24px;
-                "
-              >
-                <div>
-                  <label
-                    class="form-label"
-                    style="font-weight: 600; color: #1e293b; margin-bottom: 8px"
-                    >New Username</label
-                  >
-                  <input
-                    class="form-input"
-                    id="cu-new-username"
-                    type="text"
-                    placeholder="Enter desired username"
-                    oninput="validateUsernameInput(this)"
-                    style="
+            <!-- Form Body -->
+            <div class="username-form-grid">
+              <div>
+                <label class="form-label" style="font-weight: 600; color: #1e293b; margin-bottom: 8px">New
+                  Username</label>
+                <input class="form-input" id="cu-new-username" type="text" placeholder="Enter desired username"
+                  oninput="validateUsernameInput(this)" style="
                       background: #f8fafc;
                       border-color: #cbd5e1;
                       padding: 10px 12px;
                       font-size: 14px;
                       transition: all 0.2s;
-                    "
-                    onfocus="
+                    " onfocus="
                       this.style.background = '#ffffff';
                       this.style.borderColor = '#3b82f6';
                       this.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)';
-                    "
-                    onblur="
+                    " onblur="
                       this.style.background = '#f8fafc';
                       this.style.borderColor = '#cbd5e1';
                       this.style.boxShadow = 'none';
-                    "
-                  />
-                  <div
-                    id="cu-username-hint"
-                    style="
+                    " />
+                <div id="cu-username-hint" style="
                       font-size: 12px;
                       color: #64748b;
                       margin-top: 10px;
                       display: flex;
                       align-items: center;
                       gap: 6px;
-                    "
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="16" x2="12" y2="12" />
-                      <line x1="12" y1="8" x2="12.01" y2="8" />
-                    </svg>
-                    Alphanumeric, 3–50 characters
-                  </div>
+                    ">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" />
+                  </svg>
+                  Alphanumeric, 3–50 characters
                 </div>
+              </div>
 
-                <div>
-                  <label
-                    class="form-label"
-                    style="font-weight: 600; color: #1e293b; margin-bottom: 8px"
-                    >Current Password
-                    <span style="color: #ef4444">*</span></label
-                  >
-                  <div style="position: relative">
-                    <input
-                      class="form-input"
-                      id="cu-password"
-                      type="password"
-                      placeholder="Verify to authorize changes"
-                      style="
+              <div>
+                <label class="form-label" style="font-weight: 600; color: #1e293b; margin-bottom: 8px">Current Password
+                  <span style="color: #ef4444">*</span></label>
+                <div style="position: relative">
+                  <input class="form-input" id="cu-password" type="password" placeholder="Verify to authorize changes"
+                    style="
                         background: #f8fafc;
                         border-color: #cbd5e1;
                         padding: 10px 36px 10px 12px;
                         font-size: 14px;
                         transition: all 0.2s;
-                      "
-                      onfocus="
+                      " onfocus="
                         this.style.background = '#ffffff';
                         this.style.borderColor = '#3b82f6';
                         this.style.boxShadow = '0 0 0 3px rgba(59,130,246,0.1)';
-                      "
-                      onblur="
+                      " onblur="
                         this.style.background = '#f8fafc';
                         this.style.borderColor = '#cbd5e1';
                         this.style.boxShadow = 'none';
-                      "
-                    />
-                    <button
-                      type="button"
-                      onclick="
+                      " />
+                  <button type="button" onclick="
                         togglePwVisibility('cu-password', 'cu-password-eye')
-                      "
-                      style="
+                      " style="
                         position: absolute;
                         right: 10px;
                         top: 50%;
@@ -1418,128 +793,62 @@
                         padding: 0;
                         color: #94a3b8;
                         transition: color 0.2s;
-                      "
-                      onmouseover="this.style.color = '#64748b'"
-                      onmouseout="this.style.color = '#94a3b8'"
-                    >
-                      <svg
-                        id="cu-password-eye"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      >
-                        <path
-                          d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                        />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div
-                    style="
+                      " onmouseover="this.style.color = '#64748b'" onmouseout="this.style.color = '#94a3b8'">
+                    <svg id="cu-password-eye" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
+                <div style="
                       font-size: 12px;
                       color: #64748b;
                       margin-top: 10px;
                       display: flex;
                       align-items: center;
                       gap: 6px;
-                    "
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    >
-                      <rect
-                        x="3"
-                        y="11"
-                        width="18"
-                        height="11"
-                        rx="2"
-                        ry="2"
-                      ></rect>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    Verification required
-                  </div>
+                    ">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  Verification required
                 </div>
               </div>
+            </div>
 
-              <!-- Footer Actions -->
-              <div
-                style="
-                  background: #f8fafc;
-                  border-top: 1px solid #e5eaf0;
-                  padding: 16px 24px;
-                  display: flex;
-                  justify-content: flex-end;
-                "
-              >
-                <button
-                  class="btn-primary"
-                  id="btn-change-username"
-                  onclick="changeUsername()"
-                  style="
-                    padding: 10px 24px;
+            <!-- Footer Actions -->
+            <div class="settings-footer-bar">
+              <button class="btn-primary" id="btn-change-username" onclick="changeUsername()" style="
                     font-weight: 600;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
                     box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.25);
                     border-radius: 6px;
                     transition: all 0.2s;
-                  "
-                  onmouseover="
+                  " onmouseover="
                     this.style.transform = 'translateY(-1px)';
                     this.style.boxShadow =
                       '0 6px 10px -1px rgba(59,130,246,0.3)';
-                  "
-                  onmouseout="
+                  " onmouseout="
                     this.style.transform = 'none';
                     this.style.boxShadow =
                       '0 4px 6px -1px rgba(59,130,246,0.25)';
-                  "
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path
-                      d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
-                    ></path>
-                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                    <polyline points="7 3 7 8 15 8"></polyline>
-                  </svg>
-                  Save Username
-                </button>
-              </div>
+                  ">
+                Save Username
+              </button>
             </div>
           </div>
+        </div>
 
-          <!-- ── Change Password ── -->
-          <div class="settings-section" style="margin-top: 20px">
-            <div class="settings-header">
-              <div>
-                <div style="font-size: 14px; font-weight: 700; color: #0f172a">
-                  Change Password
-                </div>
-                <div style="font-size: 12px; color: #9ca3af; margin-top: 2px">
-                  Update your admin account password
-                </div>
-              </div>
-              <!-- Lock icon -->
-              <div
-                style="
+        <!-- ── Change Password ── -->
+        <div class="settings-section">
+          <div class="settings-header">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #0f172a">Change Password</div>
+              <div style="font-size: 12px; color: #9ca3af; margin-top: 2px">Update your admin account password</div>
+            </div>
+            <!-- Lock icon -->
+            <div style="
                   width: 34px;
                   height: 34px;
                   background: #eff6ff;
@@ -1548,336 +857,176 @@
                   align-items: center;
                   justify-content: center;
                   flex-shrink: 0;
-                "
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#3b82f6"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-              </div>
-            </div>
-            <div class="settings-body">
-              <div
-                style="
-                  display: grid;
-                  grid-template-columns: 1fr 1fr 1fr;
-                  gap: 16px;
-                "
-              >
-                <div>
-                  <label class="form-label">Current Password</label>
-                  <div style="position: relative">
-                    <input
-                      class="form-input"
-                      id="cp-current"
-                      type="password"
-                      placeholder="Enter current password"
-                      autocomplete="current-password"
-                    />
-                    <button
-                      type="button"
-                      onclick="
-                        togglePwVisibility('cp-current', 'cp-current-eye')
-                      "
-                      style="
-                        position: absolute;
-                        right: 10px;
-                        top: 50%;
-                        transform: translateY(-50%);
-                        background: none;
-                        border: none;
-                        cursor: pointer;
-                        padding: 0;
-                        color: #9ca3af;
-                      "
-                      title="Show / hide"
-                    >
-                      <svg
-                        id="cp-current-eye"
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      >
-                        <path
-                          d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                        />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="form-label">New Password</label>
-                  <div style="position: relative">
-                    <input
-                      class="form-input"
-                      id="cp-new"
-                      type="password"
-                      placeholder="Min. 8 characters"
-                      autocomplete="new-password"
-                      oninput="checkPasswordStrength(this.value)"
-                    />
-                    <button
-                      type="button"
-                      onclick="togglePwVisibility('cp-new', 'cp-new-eye')"
-                      style="
-                        position: absolute;
-                        right: 10px;
-                        top: 50%;
-                        transform: translateY(-50%);
-                        background: none;
-                        border: none;
-                        cursor: pointer;
-                        padding: 0;
-                        color: #9ca3af;
-                      "
-                      title="Show / hide"
-                    >
-                      <svg
-                        id="cp-new-eye"
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      >
-                        <path
-                          d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                        />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    </button>
-                  </div>
-                  <!-- Strength bar -->
-                  <div
-                    style="display: flex; gap: 3px; margin-top: 6px"
-                    id="cp-strength-bars"
-                  >
-                    <div
-                      id="cp-bar-1"
-                      style="
-                        flex: 1;
-                        height: 3px;
-                        border-radius: 2px;
-                        background: #e5eaf0;
-                        transition: background 0.25s;
-                      "
-                    ></div>
-                    <div
-                      id="cp-bar-2"
-                      style="
-                        flex: 1;
-                        height: 3px;
-                        border-radius: 2px;
-                        background: #e5eaf0;
-                        transition: background 0.25s;
-                      "
-                    ></div>
-                    <div
-                      id="cp-bar-3"
-                      style="
-                        flex: 1;
-                        height: 3px;
-                        border-radius: 2px;
-                        background: #e5eaf0;
-                        transition: background 0.25s;
-                      "
-                    ></div>
-                  </div>
-                  <div
-                    id="cp-strength-label"
-                    style="font-size: 10.5px; color: #9ca3af; margin-top: 3px"
-                  ></div>
-                </div>
-
-                <div>
-                  <label class="form-label">Confirm New Password</label>
-                  <div style="position: relative">
-                    <input
-                      class="form-input"
-                      id="cp-confirm"
-                      type="password"
-                      placeholder="Repeat new password"
-                      autocomplete="new-password"
-                    />
-                    <button
-                      type="button"
-                      onclick="
-                        togglePwVisibility('cp-confirm', 'cp-confirm-eye')
-                      "
-                      style="
-                        position: absolute;
-                        right: 10px;
-                        top: 50%;
-                        transform: translateY(-50%);
-                        background: none;
-                        border: none;
-                        cursor: pointer;
-                        padding: 0;
-                        color: #9ca3af;
-                      "
-                      title="Show / hide"
-                    >
-                      <svg
-                        id="cp-confirm-eye"
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                      >
-                        <path
-                          d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                        />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <!-- /grid -->
-
-              <div
-                style="
-                  display: flex;
-                  justify-content: flex-end;
-                  margin-top: 16px;
-                "
-              >
-                <button
-                  class="btn-primary"
-                  id="btn-change-pw"
-                  onclick="changePassword()"
-                  style="display: flex; align-items: center; gap: 6px"
-                >
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Update Password
-                </button>
-              </div>
+                ">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
             </div>
           </div>
-          <!-- /Change Password -->
+          <div class="settings-body">
+            <div class="password-grid">
+              <div>
+                <label class="form-label">Current Password</label>
+                <div style="position: relative">
+                  <input class="form-input" id="cp-current" type="password" placeholder="Enter current password"
+                    autocomplete="current-password" />
+                  <button type="button" onclick="
+                        togglePwVisibility('cp-current', 'cp-current-eye')
+                      " style="
+                        position: absolute;
+                        right: 10px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        background: none;
+                        border: none;
+                        cursor: pointer;
+                        padding: 0;
+                        color: #9ca3af;
+                      " title="Show / hide">
+                    <svg id="cp-current-eye" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
 
-          <div
-            style="
-              display: flex;
-              justify-content: flex-end;
-              gap: 8px;
-              margin-top: 20px;
-            "
-          >
-            <button class="btn-primary" onclick="saveSettings()">
-              Save Changes
-            </button>
+              <div>
+                <label class="form-label">New Password</label>
+                <div style="position: relative">
+                  <input class="form-input" id="cp-new" type="password" placeholder="Min. 8 characters"
+                    autocomplete="new-password" oninput="checkPasswordStrength(this.value)" />
+                  <button type="button" onclick="togglePwVisibility('cp-new', 'cp-new-eye')" style="
+                        position: absolute;
+                        right: 10px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        background: none;
+                        border: none;
+                        cursor: pointer;
+                        padding: 0;
+                        color: #9ca3af;
+                      " title="Show / hide">
+                    <svg id="cp-new-eye" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
+                <!-- Strength bar -->
+                <div style="display: flex; gap: 3px; margin-top: 6px" id="cp-strength-bars">
+                  <div id="cp-bar-1" style="
+                        flex: 1;
+                        height: 3px;
+                        border-radius: 2px;
+                        background: #e5eaf0;
+                        transition: background 0.25s;
+                      "></div>
+                  <div id="cp-bar-2" style="
+                        flex: 1;
+                        height: 3px;
+                        border-radius: 2px;
+                        background: #e5eaf0;
+                        transition: background 0.25s;
+                      "></div>
+                  <div id="cp-bar-3" style="
+                        flex: 1;
+                        height: 3px;
+                        border-radius: 2px;
+                        background: #e5eaf0;
+                        transition: background 0.25s;
+                      "></div>
+                </div>
+                <div id="cp-strength-label" style="font-size: 10.5px; color: #9ca3af; margin-top: 3px"></div>
+              </div>
+
+              <div>
+                <label class="form-label">Confirm New Password</label>
+                <div style="position: relative">
+                  <input class="form-input" id="cp-confirm" type="password" placeholder="Repeat new password"
+                    autocomplete="new-password" />
+                  <button type="button" onclick="
+                        togglePwVisibility('cp-confirm', 'cp-confirm-eye')
+                      " style="
+                        position: absolute;
+                        right: 10px;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        background: none;
+                        border: none;
+                        cursor: pointer;
+                        padding: 0;
+                        color: #9ca3af;
+                      " title="Show / hide">
+                    <svg id="cp-confirm-eye" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- /grid -->
+
+            <div class="settings-actions">
+              <button class="btn-primary" id="btn-change-pw" onclick="changePassword()">
+                Update Password
+              </button>
+            </div>
           </div>
         </div>
-        <!-- /page-settings -->
+        <!-- /Change Password -->
+
+        <div class="settings-actions">
+          <button class="btn-primary" onclick="saveSettings()">
+            Save Changes
+          </button>
+        </div>
       </div>
-      <!-- /page content wrapper -->
-    </div>
-    <!-- /#main -->
+      <!-- /page-settings -->
+    </main>
+    <!-- /page content wrapper -->
+  </div>
+  <!-- /#main -->
 
-    <!-- ════════════════════════════════════════════════════════
+  <!-- ════════════════════════════════════════════════════════
      FEEDBACK DETAIL MODAL
-════════════════════════════════════════════════════════ -->
-    <div
-      id="modal-overlay"
-      onclick="closeModal()"
-      style="
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.5);
-        z-index: 100;
-        backdrop-filter: blur(3px);
-      "
-    ></div>
+  ════════════════════════════════════════════════════════ -->
+  <div id="modal-overlay" class="modal-overlay" onclick="closeModal()"></div>
 
-    <div
-      id="modal"
-      style="
-        display: none;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        border-radius: 16px;
-        padding: 28px;
-        width: 480px;
-        max-width: 90vw;
-        z-index: 101;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-      "
-    >
-      <div
-        style="
+  <div id="modal" class="modal">
+    <div style="
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
           margin-bottom: 20px;
-        "
-      >
-        <div>
-          <div style="font-size: 16px; font-weight: 700; color: #0f172a">
-            Feedback Detail
-          </div>
-          <div
-            id="modal-date"
-            style="font-size: 12px; color: #9ca3af; margin-top: 2px"
-          ></div>
+        ">
+      <div>
+        <div style="font-size: 16px; font-weight: 700; color: #0f172a">
+          Feedback Detail
         </div>
-        <button
-          onclick="closeModal()"
-          style="
+        <div id="modal-date" style="font-size: 12px; color: #9ca3af; margin-top: 2px"></div>
+      </div>
+      <button onclick="closeModal()" aria-label="Close modal" style="
             background: none;
             border: none;
             cursor: pointer;
             color: #9ca3af;
             padding: 2px;
-          "
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-      </div>
+          ">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
 
-      <div
-        style="
+    <div style="
           display: flex;
           align-items: center;
           gap: 14px;
@@ -1885,11 +1034,8 @@
           background: #f8fafc;
           border-radius: 10px;
           margin-bottom: 16px;
-        "
-      >
-        <div
-          id="modal-avatar"
-          style="
+        ">
+      <div id="modal-avatar" style="
             width: 44px;
             height: 44px;
             border-radius: 50%;
@@ -1900,21 +1046,16 @@
             font-weight: 700;
             color: white;
             font-size: 15px;
-          "
-        ></div>
-        <div>
-          <div
-            id="modal-customer"
-            style="font-size: 14px; font-weight: 600; color: #0f172a"
-          ></div>
-          <div id="modal-stars" style="font-size: 16px; margin-top: 2px"></div>
-        </div>
-        <div id="modal-sentiment-badge" style="margin-left: auto"></div>
+            flex-shrink: 0;
+          "></div>
+      <div style="min-width: 0">
+        <div id="modal-customer" style="font-size: 14px; font-weight: 600; color: #0f172a"></div>
+        <div id="modal-stars" style="font-size: 16px; margin-top: 2px"></div>
       </div>
+      <div id="modal-sentiment-badge" style="margin-left: auto; flex-shrink: 0"></div>
+    </div>
 
-      <div
-        id="modal-message"
-        style="
+    <div id="modal-message" style="
           font-size: 13.5px;
           color: #374151;
           line-height: 1.7;
@@ -1928,56 +1069,43 @@
           white-space: pre-wrap;
           word-wrap: break-word;
           word-break: break-word;
-        "
-      ></div>
+        "></div>
 
-      <div style="display: flex; gap: 8px; justify-content: flex-end">
-        <button class="btn-secondary" onclick="closeModal()">Close</button>
-        <button class="btn-primary" onclick="deleteFeedbackFromModal()">
-          <span style="display: flex; align-items: center; gap: 5px">
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-              <path d="M10 11v6" />
-              <path d="M14 11v6" />
-            </svg>
-            Delete
-          </span>
-        </button>
-      </div>
+    <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px;">
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn-primary" onclick="deleteFeedbackFromModal()">
+        <span style="display: flex; align-items: center; gap: 5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            <path d="M10 11v6" />
+            <path d="M14 11v6" />
+          </svg>
+          Delete
+        </span>
+      </button>
     </div>
-    <!-- /modal -->
+  </div>
+  <!-- /modal -->
 
-    <!-- ════════════════════════════════════════════════════════
+  <!-- ════════════════════════════════════════════════════════
      TOAST
-════════════════════════════════════════════════════════ -->
-    <div id="toast">
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.5"
-      >
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
-      <span id="toast-msg">Saved successfully!</span>
-    </div>
+  ════════════════════════════════════════════════════════ -->
+  <div id="toast">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+    <span id="toast-msg">Saved successfully!</span>
+  </div>
 
-    <!-- ════════════════════════════════════════════════════════
+  <!-- ════════════════════════════════════════════════════════
      SCRIPTS
-════════════════════════════════════════════════════════ -->
-    <!-- jsPDF + AutoTable for PDF export -->
-    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-    <script src="admin.js"></script>
-  </body>
+  ════════════════════════════════════════════════════════ -->
+  <!-- jsPDF + AutoTable for PDF export -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="admin.js?v=3"></script>
+
+</body>
+
 </html>

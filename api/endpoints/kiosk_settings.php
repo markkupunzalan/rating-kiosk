@@ -13,7 +13,6 @@
  * GET /api/kiosk_settings.php → returns flat JSON object
  */
 
-header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Cache-Control: no-store, no-cache, must-revalidate');
 
@@ -24,7 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     exit;
 }
 
-require_once __DIR__ . '/db.php';
 
 // Only expose kiosk-safe, non-sensitive keys
 $allowed_keys = ['default_language', 'business_name', 'logo_url', 'primary_color'];

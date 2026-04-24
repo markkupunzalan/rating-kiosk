@@ -1,9 +1,6 @@
 <?php
 // CODE-4 FIX: Use __DIR__-relative paths for consistent resolution.
-require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/config.php';
 
-header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

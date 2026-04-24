@@ -35,7 +35,7 @@ define('SMTP_USER', $_ENV['SMTP_USER'] ?? getenv('SMTP_USER') ?: 'your_email@gma
 define('SMTP_PASS', $_ENV['SMTP_PASS'] ?? getenv('SMTP_PASS') ?: 'your_app_password');
 define('SMTP_FROM_EMAIL', $_ENV['SMTP_FROM_EMAIL'] ?? getenv('SMTP_FROM_EMAIL') ?: 'no-reply@feedbackkiosk.local');
 define('SMTP_FROM_NAME', $_ENV['SMTP_FROM_NAME'] ?? getenv('SMTP_FROM_NAME') ?: 'Feedback Kiosk Admin');
-define('APP_URL', $_ENV['APP_URL'] ?? getenv('APP_URL') ?: 'http://localhost/phpl=kios/kiosk%20pp');
+define('APP_URL', $_ENV['APP_URL'] ?? getenv('APP_URL') ?: 'http://localhost/rating-kiosk');
 
 // ── Security: warn if HMAC secret was never changed ──────────
 if (KIOSK_HMAC_SECRET === 'CHANGE_ME_before_deploying') {

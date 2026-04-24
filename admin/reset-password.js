@@ -65,16 +65,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setLoading(true);
 
     try {
-      const formData = new URLSearchParams();
-      formData.append('token', tokenInput.value);
-      formData.append('password', password);
-
       const response = await fetch('../api/reset_password.php', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/json'
         },
-        body: formData.toString()
+        body: JSON.stringify({
+          token: tokenInput.value,
+          password: password
+        })
       });
 
       const textResponse = await response.text();

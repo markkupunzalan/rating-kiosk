@@ -9,7 +9,6 @@
  * DELETE /api/feedback.php                    → delete by id
  */
 
-header('Content-Type: application/json');
 // SEC-2 FIX: Removed wildcard CORS — this endpoint uses session auth.
 // Same-origin requests work without CORS headers; wildcard would allow
 // cross-site requests that piggyback on the admin's session cookie.
@@ -20,7 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-require_once __DIR__ . '/db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -198,7 +196,6 @@ if ($method === 'POST') {
 
     // ── Bulk recalculate action ───────────────────────────────
     if (isset($_GET['action']) && $_GET['action'] === 'recalculate') {
-        require_once __DIR__ . '/authMiddleware.php';
 
         $rows = $conn->query(
             'SELECT id, q1_rating, q2_rating, q3_rating, q4_rating, q5_rating, comment FROM feedback'
@@ -298,7 +295,6 @@ if ($method === 'POST') {
 //  DELETE — Remove a feedback entry
 // ─────────────────────────────────────────────────────────────
 if ($method === 'DELETE') {
-    require_once __DIR__ . '/authMiddleware.php';
 
     $raw = file_get_contents('php://input');
     $body = json_decode($raw, true);
@@ -331,7 +327,6 @@ if ($method === 'DELETE') {
 //  GET — List feedback (paginated, filtered)
 // ─────────────────────────────────────────────────────────────
 if ($method === 'GET') {
-    require_once __DIR__ . '/authMiddleware.php';
 
     // CSV export mode
     $exportCSV = isset($_GET['export']) && $_GET['export'] === 'csv';

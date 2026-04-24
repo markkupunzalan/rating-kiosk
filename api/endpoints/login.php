@@ -6,11 +6,7 @@
  * All other endpoints use 'error' for failure payloads. login.js already
  * reads data.message || data.error so this change is backward-compatible.
  */
-session_start();
-header('Content-Type: application/json');
 
-require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 

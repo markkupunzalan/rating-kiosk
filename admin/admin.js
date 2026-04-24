@@ -35,8 +35,48 @@ let hourlyInst = null;
 let currentFeedbackTotal =
   parseInt(localStorage.getItem("lastSeenFeedbackCount")) || 0;
 
+/* ── Responsive breakpoint ────────────────────────────────── */
+const DESKTOP_BP = 1024;
+
+function unlockPageScroll() {
+  document.body.classList.remove("sidebar-open");
+
+  document.documentElement.style.height = "auto";
+  document.documentElement.style.minHeight = "100%";
+  document.documentElement.style.overflowY = "auto";
+  document.documentElement.style.overflowX = "hidden";
+
+  document.body.style.height = "auto";
+  document.body.style.minHeight = "100dvh";
+  document.body.style.overflowY = "auto";
+  document.body.style.overflowX = "hidden";
+  document.body.style.position = "static";
+
+  const main = document.getElementById("main");
+  if (main) {
+    main.style.height = "auto";
+    main.style.minHeight = "100dvh";
+    main.style.overflow = "visible";
+  }
+
+  const pageContent = document.querySelector(".page-content");
+  if (pageContent) {
+    pageContent.style.height = "auto";
+    pageContent.style.minHeight = "0";
+    pageContent.style.overflow = "visible";
+  }
+
+  const activeSection = document.querySelector(".page-section.active");
+  if (activeSection) {
+    activeSection.style.height = "auto";
+    activeSection.style.overflow = "visible";
+  }
+}
+
 /* ── Bootstrap ───────────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", async () => {
+  unlockPageScroll();
+
   try {
     const authData = await apiFetch("../api/authCheck.php");
     if (authData.username) setAdminUsername(authData.username);
@@ -52,26 +92,65 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateSidebarFeedbackCount();
   setInterval(updateSidebarFeedbackCount, 30000);
 
-  // Responsive hamburger
-  const ham = document.getElementById("hamburger");
-  if (ham) ham.style.display = window.innerWidth <= 768 ? "block" : "none";
+  // ESC key closes sidebar on mobile/tablet
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeSidebar();
+  });
+
+  window.addEventListener("orientationchange", () => {
+    setTimeout(unlockPageScroll, 50);
+  });
+
+  // Schedule midnight reset for the feedback page
+  scheduleMidnightReset();
 });
 
+/* ── Midnight Reset ──────────────────────────────────────── */
+let midnightResetTimer = null;
+
+function scheduleMidnightReset() {
+  if (midnightResetTimer) clearTimeout(midnightResetTimer);
+  const now = new Date();
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const msUntilMidnight = tomorrow - now;
+
+  midnightResetTimer = setTimeout(() => {
+    scheduleMidnightReset();
+    const fbPage = document.getElementById("page-feedback");
+    if (fbPage && fbPage.classList.contains("active")) {
+      initFeedbackTable();
+    }
+  }, msUntilMidnight + 1000); // +1s to ensure it's the next day
+}
+
+/* ── Resize: close drawer when crossing into desktop ─────── */
 window.addEventListener("resize", () => {
-  const ham = document.getElementById("hamburger");
-  if (ham) ham.style.display = window.innerWidth <= 768 ? "block" : "none";
+  if (window.innerWidth >= DESKTOP_BP) {
+    closeSidebar(true); // silent — no transition jank
+  }
 });
 
 /* ── Topbar helpers ──────────────────────────────────────── */
 function setTopbarDate() {
-  const opts = {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  const updateDate = () => {
+    const opts = {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    };
+    const formatted = new Date().toLocaleString("en-US", opts).replace(", ", " • ");
+    ["topbar-date", "feedback-topbar-date", "settings-topbar-date"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = formatted;
+    });
   };
-  document.getElementById("topbar-date").textContent =
-    new Date().toLocaleDateString("en-US", opts);
+
+  updateDate();
+  setInterval(updateDate, 60000);
 }
 
 /**
@@ -104,9 +183,73 @@ function setAdminUsername(username) {
   if (cuAvatarEl) cuAvatarEl.textContent = initials;
 }
 
-function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("open");
+/* ── Sidebar drawer management ───────────────────────────── */
+function openSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+  if (!sidebar) return;
+
+  sidebar.classList.add("open");
+  sidebar.setAttribute("aria-modal", "true");
+  if (overlay) overlay.classList.add("visible");
+  document.body.classList.add("sidebar-open");
+
+  // Focus the close button for keyboard users
+  const closeBtn = document.getElementById("sidebar-close");
+  if (closeBtn) setTimeout(() => closeBtn.focus(), 80);
+
+  // Install focus trap
+  sidebar.addEventListener("keydown", _sidebarFocusTrap);
 }
+
+function closeSidebar(silent) {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("sidebar-overlay");
+  if (!sidebar) return;
+
+  // On desktop the sidebar is always visible — never add/remove .open
+  if (window.innerWidth >= DESKTOP_BP && !silent) return;
+
+  sidebar.classList.remove("open");
+  sidebar.setAttribute("aria-modal", "false");
+  if (overlay) overlay.classList.remove("visible");
+  document.body.classList.remove("sidebar-open");
+
+  // Remove focus trap
+  sidebar.removeEventListener("keydown", _sidebarFocusTrap);
+
+  // Return focus to hamburger
+  if (!silent) {
+    const ham = document.getElementById("hamburger");
+    if (ham) ham.focus();
+  }
+
+  unlockPageScroll();
+}
+
+/** Keep Tab focus inside the sidebar when it's open as a drawer (a11y). */
+function _sidebarFocusTrap(e) {
+  if (e.key !== "Tab") return;
+  const sidebar = document.getElementById("sidebar");
+  const focusable = sidebar.querySelectorAll(
+    'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  );
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+}
+
+// Legacy alias for any remaining inline references
+function toggleSidebar() { openSidebar(); }
+
 
 /* ── Sidebar helpers ─────────────────────────────────────── */
 async function updateSidebarFeedbackCount() {
@@ -162,6 +305,11 @@ function navigate(page) {
     navEl.setAttribute("aria-current", "page");
   }
 
+  // Auto-close sidebar drawer on mobile/tablet after navigation
+  if (window.innerWidth < DESKTOP_BP) {
+    closeSidebar();
+  }
+
   // Logic to clear unread badge instantly on entering the feedback page
   if (page === "feedback") {
     localStorage.setItem("lastSeenFeedbackCount", currentFeedbackTotal);
@@ -193,6 +341,10 @@ function navigate(page) {
   }
   if (page === "feedback") initFeedbackTable();
   if (page === "settings") initSettingsPage();
+
+  requestAnimationFrame(() => {
+    unlockPageScroll();
+  });
 }
 
 /* ── Generic fetch wrapper ───────────────────────────────── */
@@ -384,6 +536,7 @@ function buildPieChart(pos, neu, neg) {
   });
 }
 
+
 /* ── Rating Breakdown Bars ───────────────────────────────── */
 function buildRatingBreakdown(breakdown) {
   const labels = {
@@ -436,10 +589,7 @@ function buildQuestionBreakdown(questionCounts) {
   // Calculate totals
   const colTotals = questionNames.map((_, index) => {
     const key = `q${index + 1}`;
-    return [1, 2, 3, 4, 5].reduce(
-      (sum, value) => sum + (questionCounts[key]?.[value] || 0),
-      0,
-    );
+    return [1, 2, 3, 4, 5].reduce((sum, value) => sum + (questionCounts[key]?.[value] || 0), 0);
   });
   const grandTotal = colTotals.reduce((sum, total) => sum + total, 0);
 
@@ -467,7 +617,7 @@ function buildQuestionBreakdown(questionCounts) {
 
   const totalRow = `<tr style="background:#f8fafc">
     <td style="padding:10px 8px;color:#475569;font-size:13px;border-bottom:1px solid #e5e7eb;font-weight:600">Total</td>
-    ${colTotals.map((total) => `<td style="padding:10px 8px;text-align:right;color:#0f172a;font-size:13px;border-bottom:1px solid #e5e7eb;font-weight:600">${total}</td>`).join("")}
+    ${colTotals.map(total => `<td style="padding:10px 8px;text-align:right;color:#0f172a;font-size:13px;border-bottom:1px solid #e5e7eb;font-weight:600">${total}</td>`).join("")}
     <td style="padding:10px 8px;text-align:right;color:#0f172a;font-size:13px;border-bottom:1px solid #e5e7eb;font-weight:600">${grandTotal}</td>
   </tr>`;
 
@@ -493,14 +643,28 @@ function buildQuestionBreakdown(questionCounts) {
 /* ============================================================
    FEEDBACK MANAGEMENT — TABLE (server-side pagination)
    ============================================================ */
+function getLocalYMD() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function initFeedbackTable() {
-  // Reset filters and reload
+  const today = getLocalYMD();
+  
+  // Reset filters and set date to today by default
   Object.keys(filters).forEach((k) => (filters[k] = ""));
+  filters.from = today;
+  filters.to = today;
+
   document.getElementById("searchInput").value = "";
   document.getElementById("ratingFilter").value = "";
   document.getElementById("sentimentFilter").value = "";
-  document.getElementById("dateFrom").value = "";
-  document.getElementById("dateTo").value = "";
+  document.getElementById("dateFrom").value = today;
+  document.getElementById("dateTo").value = today;
+  
   currentPage = 1;
   fetchFeedbackPage();
 }
@@ -517,14 +681,7 @@ function applyFilters() {
 }
 
 function clearFilters() {
-  Object.keys(filters).forEach((k) => (filters[k] = ""));
-  document.getElementById("searchInput").value = "";
-  document.getElementById("ratingFilter").value = "";
-  document.getElementById("sentimentFilter").value = "";
-  document.getElementById("dateFrom").value = "";
-  document.getElementById("dateTo").value = "";
-  currentPage = 1;
-  fetchFeedbackPage();
+  initFeedbackTable();
 }
 
 /* ── Fetch current page from server ─────────────────────── */
@@ -755,14 +912,19 @@ function openModal(id) {
     </div>
     <div style="display:flex;flex-direction:column;gap:7px">`;
 
-  const ratingLabels = ["Very Bad", "Bad", "Neutral", "Good", "Excellent"];
+  const ratingLabels = [
+    "Very Bad",
+    "Bad",
+    "Neutral",
+    "Good",
+    "Excellent",
+  ];
 
   qLabels.forEach((label, i) => {
     const val = qValues[i] || 0;
     const colors = ["#ef4444", "#f97316", "#f59e0b", "#3b82f6", "#10b981"];
     const color = colors[val - 1] || "#d1d5db";
-    const labelText =
-      val >= 1 && val <= 5 ? ratingLabels[val - 1] : "No rating";
+    const labelText = val >= 1 && val <= 5 ? ratingLabels[val - 1] : "No rating";
     questionHTML += `
       <div style="display:flex;align-items:center;gap:10px">
         <div style="font-size:11.5px;color:#6b7280;width:76px">${label}</div>
@@ -852,13 +1014,13 @@ function chartBaseOptions({ legend = true, legendPos = "bottom" } = {}) {
     plugins: {
       legend: legend
         ? {
-            position: legendPos,
-            labels: {
-              font: { size: 11, family: "DM Sans" },
-              usePointStyle: true,
-              pointStyleWidth: 8,
-            },
-          }
+          position: legendPos,
+          labels: {
+            font: { size: 11, family: "DM Sans" },
+            usePointStyle: true,
+            pointStyleWidth: 8,
+          },
+        }
         : { display: false },
     },
     scales: {
@@ -891,8 +1053,7 @@ async function initSettingsPage() {
 
     // Restore logo preview from the saved URL (relative path or data URI)
     if (data.logo_url) {
-      const isExternal =
-        data.logo_url.startsWith("http") || data.logo_url.startsWith("data:");
+      const isExternal = data.logo_url.startsWith("http") || data.logo_url.startsWith("data:");
       const previewSrc = isExternal ? data.logo_url : "../" + data.logo_url;
       const previewName = data.logo_url.startsWith("data:")
         ? "Uploaded logo"
@@ -980,7 +1141,7 @@ async function handleLogoFileChange(input) {
         : data.logo_url.split("/").pop();
     }
 
-    showToast("Logo uploaded successfully ✓");
+    showToast("Logo uploaded successfully");
   } catch (err) {
     showToast("Logo upload failed: " + err.message, true);
     // Revert preview on failure
@@ -1380,10 +1541,8 @@ async function exportCSV() {
     });
 
     const averageRating = records.length
-      ? records.reduce(
-          (sum, r) => sum + (parseFloat(r.overall_rating) || 0),
-          0,
-        ) / records.length
+      ? records.reduce((sum, r) => sum + (parseFloat(r.overall_rating) || 0), 0) /
+      records.length
       : 0;
     const positivePct = records.length
       ? Math.round((sentCounts.positive / records.length) * 100)
@@ -1417,41 +1576,22 @@ async function exportCSV() {
       ["Generated", generatedAt],
       ["", ""],
       ["SUMMARY", ""],
-      [
-        "Average Rating",
-        "Positive Sentiment",
-        "Neutral Sentiment",
-        "Negative Sentiment",
-      ],
-      [
-        averageRating.toFixed(1),
-        `${positivePct}%`,
-        `${neutralPct}%`,
-        `${negativePct}%`,
-      ],
-      [
-        records.length,
-        sentCounts.positive,
-        sentCounts.neutral,
-        sentCounts.negative,
-      ],
+      ["Average Rating", "Positive Sentiment", "Neutral Sentiment", "Negative Sentiment"],
+      [averageRating.toFixed(1), `${positivePct}%`, `${neutralPct}%`, `${negativePct}%`],
+      [records.length, sentCounts.positive, sentCounts.neutral, sentCounts.negative],
       ["", ""],
       ["QUESTION BREAKDOWN", ""],
-      [
-        "Response",
-        "Cleanliness",
-        "Staff",
-        "Speed",
-        "Quality",
-        "Overall",
-        "Total",
-      ],
+      ["Response", "Cleanliness", "Staff", "Speed", "Quality", "Overall", "Total"],
       ["Very Bad", ...qBreakdowns.map((counts) => counts[0]), rowTotals[0]],
       ["Bad", ...qBreakdowns.map((counts) => counts[1]), rowTotals[1]],
       ["Neutral", ...qBreakdowns.map((counts) => counts[2]), rowTotals[2]],
       ["Good", ...qBreakdowns.map((counts) => counts[3]), rowTotals[3]],
       ["Excellent", ...qBreakdowns.map((counts) => counts[4]), rowTotals[4]],
-      ["Total", ...colTotals, grandTotal],
+      [
+        "Total",
+        ...colTotals,
+        grandTotal,
+      ],
       ["", ""],
       ["INDIVIDUAL RECORDS", ""],
       ["", ""],
@@ -1482,7 +1622,7 @@ async function exportCSV() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    showToast("CSV report downloaded ✓");
+    showToast("CSV report downloaded");
   } catch (err) {
     showToast("CSV export failed: " + err.message, true);
   } finally {
@@ -1565,7 +1705,7 @@ async function exportPDF() {
 
     const averageRating = records.length
       ? records.reduce((sum, r) => sum + Number(r.overall_rating || 0), 0) /
-        records.length
+      records.length
       : 0;
     const positivePct = records.length
       ? Math.round((sentCounts.positive / records.length) * 100)
@@ -1583,7 +1723,7 @@ async function exportPDF() {
     // Question breakdowns
     const qBreakdowns = Q_LABELS.map((_, qi) => {
       const counts = [0, 0, 0, 0, 0];
-      records.forEach((r) => {
+      records.forEach(r => {
         const rating = r[`q${qi + 1}_rating`];
         if (rating >= 1 && rating <= 5) counts[rating - 1]++;
       });
@@ -1630,34 +1770,34 @@ async function exportPDF() {
     // Record count summary — right-aligned, smaller
     doc.setFontSize(7.5);
     doc.setTextColor(...C.textLight);
-    doc.text(filterLabel, PW - M, 20, { align: "right" });
+    doc.text(
+      filterLabel,
+      PW - M,
+      20,
+      { align: "right" },
+    );
 
     // ══════════════════════════════════════════════════════════
-    //  SECTION B — Summary metrics table
+    //  SECTION B — Summary metrics table  
     // ══════════════════════════════════════════════════════════
     const SUMMARY_Y = HDR_H + 5;
 
     const summaryTableHead = [
-      [
-        "Average Rating",
-        "Positive Sentiment",
-        "Neutral Sentiment",
-        "Negative Sentiment",
-      ],
+      ["Average Rating", "Positive Sentiment", "Neutral Sentiment", "Negative Sentiment"]
     ];
     const summaryTableBody = [
       [
         averageRating.toFixed(1),
         `${positivePct}%`,
         `${neutralPct}%`,
-        `${negativePct}%`,
+        `${negativePct}%`
       ],
       [
         records.length.toString(),
         sentCounts.positive.toString(),
         sentCounts.neutral.toString(),
-        sentCounts.negative.toString(),
-      ],
+        sentCounts.negative.toString()
+      ]
     ];
 
     doc.autoTable({
@@ -1694,22 +1834,20 @@ async function exportPDF() {
 
     // Calculate row totals and column totals
     const rowTotals = ratingLabels.map((_, ri) =>
-      qBreakdowns.reduce((sum, counts) => sum + counts[ri], 0),
+      qBreakdowns.reduce((sum, counts) => sum + counts[ri], 0)
     );
     const colTotals = Q_LABELS.map((_, qi) =>
-      qBreakdowns[qi].reduce((sum, count) => sum + count, 0),
+      qBreakdowns[qi].reduce((sum, count) => sum + count, 0)
     );
     const grandTotal = colTotals.reduce((sum, total) => sum + total, 0);
 
     const qTableBody = ratingLabels.map((label, ri) => [
       label,
-      ...qBreakdowns.map((counts) => counts[ri].toString()),
-      rowTotals[ri].toString(),
+      ...qBreakdowns.map(counts => counts[ri].toString()),
+      rowTotals[ri].toString()
     ]);
 
-    const qTableFoot = [
-      ["Total", ...colTotals.map((t) => t.toString()), grandTotal.toString()],
-    ];
+    const qTableFoot = [["Total", ...colTotals.map(t => t.toString()), grandTotal.toString()]];
 
     doc.autoTable({
       startY: QTABLE_Y,
@@ -1741,7 +1879,7 @@ async function exportPDF() {
     //  SECTION D — Individual feedback records (Page 2+)
     // ══════════════════════════════════════════════════════════
     doc.addPage(); // Start records on new page
-    const TABLE_Y = M; // Top margin for new page
+    const TABLE_Y = M;  // Top margin for new page
 
     // tableRows already built by _fetchExportData() above.
     // Rating column text is cleared in didParseCell; stars are
@@ -1935,7 +2073,7 @@ async function exportPDF() {
     // ── 5. Save ───────────────────────────────────────────────
     const dateTag = new Date().toISOString().slice(0, 10);
     doc.save(`feedback-report-${dateTag}.pdf`);
-    showToast("PDF report downloaded ✓");
+    showToast("PDF report downloaded");
   } catch (err) {
     showToast("PDF export failed: " + err.message, true);
   } finally {

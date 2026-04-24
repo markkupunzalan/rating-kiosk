@@ -6,10 +6,7 @@
  * LOW-2 FIX: Standardized all error response payloads to use 'error' key.
  * Success response retains 'message' as a human-readable description.
  */
-require_once __DIR__ . '/authMiddleware.php';
-header('Content-Type: application/json');
 
-require_once __DIR__ . '/db.php';
 
 
 // ── Method guard ──────────────────────────────────────────────
